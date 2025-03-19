@@ -1,0 +1,42 @@
+services:
+
+  backend:
+    build: ./Back/
+    container_name: ${APP_NAME}_backend
+    environment:
+      - MARIADB_ROOT_PASSWORD=${SQL_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${SQL_DATABASE}
+      - MARIADB_USER=${SQL_USER}
+      - MARIADB_PASSWORD=${SQL_PASSWORD}
+      - MARIADB_HOST=db
+      - MARIADB_PORT=3306
+
+    volumes:
+      - ./Back/TFG:/usr/src/app/
+
+    ports:
+      - ${HTTP_PORT}:8000
+
+    networks:
+      - tfg
+
+    restart: always
+
+  frontend:
+    build: ./Front/
+    container_name: ${APP_NAME}_frontend
+
+    volumes:
+      - ./Front/TFG:/app
+      - /app/node_modules
+    ports:
+      - ${VITE_PORT}:5173
+    networks:
+      - tfg
+    depends_on:
+      - backend
+    restart: always
+
+networks:
+  tfg:
+    name: ${APP_NAME}_network
