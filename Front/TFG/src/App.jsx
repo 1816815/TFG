@@ -1,25 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext, use } from "react";
+import useAuth from "./hooks/useAuth.js";
 import ChartGenerator from "./components/Chart";
+import Login from "./components/Login.jsx";
+import Logout from "./components/Logout.jsx";
 
 function App() {
   const [message, setMessage] = useState(null);
-  const API_URL = import.meta.env.VITE_API_URL;
+  const { API_URL, isAuthenticated } = useAuth();
 
   const holaMundoDesdeDjango = async () => {
     try {
       const response = await fetch(`${API_URL}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       const data = await response.json();
       setMessage(data.message);
-
     } catch (error) {
       console.error("Error al obtener datos:", error);
-      setMessage('Hubo un error al cargar el mensaje'); 
+      setMessage("Hubo un error al cargar el mensaje");
     }
   };
 
@@ -27,16 +29,14 @@ function App() {
     holaMundoDesdeDjango();
   }, []);
 
-
-
-
-
   return (
     <>
       <h1>Trabajo de Fin de Grado</h1>
 
-      { message ? <p>{message}</p> : <p>Cargando...</p> }
+      {message ? <p>{message}</p> : <p>Cargando...</p>}
       <ChartGenerator />
+      {isAuthenticated ? <Logout /> : <Login />}
+
     </>
   );
 }
