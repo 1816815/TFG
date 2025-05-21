@@ -11,10 +11,10 @@ export const AuthProvider = ({ children }) => {
   // Refresca el token usando la cookie
   const refreshToken = async () => {
     try {
-      const res = await fetch(`${API_URL}/nombre-pendiente/token/refresh/`, {
+      const res = await fetch(`${API_URL}/token/refresh/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include' // Necesario para que se envíe la cookie
+        credentials: 'include' // Necessary in order to send the cookie
       });
       const data = await res.json();
       if (res.ok) {
@@ -31,15 +31,15 @@ export const AuthProvider = ({ children }) => {
   // Refresca el token al cargar
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
-    if (!isLoggedIn) return; // No ejecutar si no está logueado
+    if (!isLoggedIn) return; // Stop if not logged in
     
     refreshToken();
-    const interval = setInterval(refreshToken, 15 * 60 * 1000); // cada 15 min
+    const interval = setInterval(refreshToken, 15 * 60 * 1000); // every 15 min
     return () => clearInterval(interval);
   }, []);
 
   const logout = async () => {
-    await fetch(`${API_URL}nombre-pendiente/logout/`, {
+    await fetch(`${API_URL}/logout/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include'

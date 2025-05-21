@@ -1,19 +1,29 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+class Role(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
 
 class User(AbstractUser):
-    ROL_CHOICES = (
-        ('client', 'Client'),
-        ('admin', 'Admin'),
-        ('voter', 'Voter'),
-    )
+
     email = models.EmailField(unique=True)
-    rol = models.CharField(max_length=20, choices=ROL_CHOICES)
+    role = models.ForeignKey(Role, on_delete=models.PROTECT, null=True, blank=True)
     register_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.username} ({self.rol})"
+        return f"{self.username}"
+    #overriding of the save method in order to assign a default role for every user.
+    def save(self, *args, **kwargs):
+        if not self.role:
+            try:
+                self.role = Role.objects.get(name='client')
+            except Role.DoesNotExist:
+                raise ValueError("El rol 'client' no existe en la base de datos")
+        super().save(*args, **kwargs)
 
 
 class Survey(models.Model):

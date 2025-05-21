@@ -12,7 +12,7 @@ const ChartDemo = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/nombre-pendiente/generar-grafica/`, {
+            const response = await fetch(`${API_URL}/generar-grafica/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -49,14 +49,6 @@ const Login = () => {
               onChange={handleChange}
               required
             />
-            <input
-              type="text"
-              name="rol"
-              placeholder="Rol (admin, client...)"
-              value={formData.rol}
-              onChange={handleChange}
-              required
-            />
           </>
         )}
         <input

@@ -1,20 +1,25 @@
+import math
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer, UserSerializer, RoleSerializer
+from .models import User, Role
 
-
+import os
+import numpy as np
 import base64
 import io
 import json
+import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -130,9 +135,54 @@ class LogoutView(APIView):
 
         try:
             token = RefreshToken(refresh_token)
-            token.blacklist()  # 🔥 Invalida el token
+            token.blacklist()  # Blaclist the refresh token
         except TokenError:
-            # Token inválido o ya blacklisteado, lo ignoramos
             pass
 
         return response
+    
+class IsAdminUserRole(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role.name == 'admin' or request.user.is_staff
+
+class UserAdminViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUserRole]
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as e:
+            print("Validation error:", e.detail)
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+     #Método para desactivar en lugar de borrar
+    @action(detail=True, methods=['post'])
+    def deactivate(self, request, pk=None):
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+        
+    # Método para reactivar un usuario
+    @action(detail=True, methods=['post'])
+    def activate(self, request, pk=None):
+        instance = self.get_object()
+        instance.is_active = True
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+class RoleListView(APIView):
+    permission_classes = [IsAdminUserRole]
+
+    def get(self, request):
+        roles = Role.objects.all()
+        serializer = RoleSerializer(roles, many=True)
+        return Response(serializer.data)

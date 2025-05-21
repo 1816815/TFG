@@ -3,6 +3,8 @@ import useAuth from "./hooks/useAuth.js";
 import ChartGenerator from "./components/Chart";
 import Login from "./components/Login.jsx";
 import Logout from "./components/Logout.jsx";
+import AdminPanel from "./components/AdminPanel.jsx";
+
 
 function App() {
   const [message, setMessage] = useState(null);
@@ -37,6 +39,8 @@ function App() {
       <ChartGenerator />
       {isAuthenticated ? <Logout /> : <Login />}
 
+      {isAuthenticated ? <AdminPanel /> : ''}
+      
     </>
   );
 }

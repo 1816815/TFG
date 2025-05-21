@@ -27,7 +27,7 @@ const useAuth = () => {
 
   const login = async ({ username, password }) => {
     try {
-      const res = await fetch(`${API_URL}/nombre-pendiente/token/`, {
+      const res = await fetch(`${API_URL}/token/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -38,7 +38,7 @@ const useAuth = () => {
 
       if (res.ok) {
         setAccessToken(data.access);
-        localStorage.setItem("isLoggedIn", true); // Guardar estado de sesión
+        localStorage.setItem("isLoggedIn", true); // Save session
         return { success: true };
       } else {
         return {
@@ -53,20 +53,20 @@ const useAuth = () => {
 
   const logout = async () => {
     try {
-      localStorage.removeItem("isLoggedIn"); // Limpiar estado de sesión
+      localStorage.removeItem("isLoggedIn"); // Clean session
       await contextLogout();
     } catch (e) {
       console.warn("Error cerrando sesión", e);
     }
   };
 
-  const register = async ({ username, email, password, rol }) => {
+  const register = async ({ username, email, password }) => {
     try {
-      const res = await fetch(`${API_URL}/nombre-pendiente/register/`, {
+      const res = await fetch(`${API_URL}/register/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ username, email, password, rol }),
+        body: JSON.stringify({ username, email, password }),
       });
 
       const data = await res.json();
