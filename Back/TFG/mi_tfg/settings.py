@@ -54,7 +54,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://91.99.94.146:6002".
+    "http://91.99.94.146:6002",
     "http://cuestamarket.duckdns.org:6002/"
 ]
 
