@@ -30,7 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'role_id', 'password']
+        fields = ['id', 'username', 'email', 'role', 'role_id', 'password', 'is_active']
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
         }
@@ -39,14 +39,14 @@ class UserSerializer(serializers.ModelSerializer):
         role_id = validated_data.pop('role_id', None)
         password = validated_data.pop('password', None)
         
-        # Crear el usuario
+        # Create user
         user = User(**validated_data)
         
-        # Establecer la contraseña si se proporcionó
+        # Stablish password if provided
         if password:
             user.set_password(password)
         
-        # Asignar rol si se proporcionó
+        # Asign role if provided
         if role_id:
             try:
                 role = Role.objects.get(id=role_id)
@@ -61,15 +61,15 @@ class UserSerializer(serializers.ModelSerializer):
         role_id = validated_data.pop('role_id', None)
         password = validated_data.pop('password', None)
         
-        # Actualizar campos básicos
+        # Update fields
         for key, value in validated_data.items():
             setattr(instance, key, value)
         
-        # Actualizar contraseña si se proporcionó
+        # Update password if provided
         if password:
             instance.set_password(password)
             
-        # Actualizar rol si se proporcionó
+        # Update role if provided
         if role_id is not None:
             try:
                 role = Role.objects.get(id=role_id)

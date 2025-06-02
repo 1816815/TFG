@@ -1,9 +1,12 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
-import { AuthProvider } from "./components/AuthProvider.jsx";
+import { Provider } from "react-redux";
+import { store } from "./Redux/store.js";
 
 createRoot(document.getElementById("root")).render(
-  <AuthProvider>
-    <App />
-  </AuthProvider>
+<Provider store={store}>
+   <App />
+</Provider>
+   
+
 );

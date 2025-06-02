@@ -54,6 +54,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://cuestamarket.duckdns.org",
+    "https://api.cuestamarket.duckdns.org"
 ]
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
@@ -158,7 +160,7 @@ AUTH_USER_MODEL = 'nombre_pendiente.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'nombre_pendiente.authentication.CookieJWTAuthentication',
     ),
 }
 

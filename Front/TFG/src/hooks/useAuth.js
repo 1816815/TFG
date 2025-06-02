@@ -1,96 +1,112 @@
-import { useContext } from "react";
-import { AuthContext } from "../components/AuthProvider";
-import { jwtDecode } from "jwt-decode";
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { loginUser , logoutUser, registerUser } from '../redux/userSlice';
 
 const useAuth = () => {
-  const {
-    accessToken,
-    setAccessToken,
-    logout: contextLogout,
-    API_URL,
-  } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const { user, accessToken, status } = useSelector((state) => state.user);
+  const navigate = useNavigate();
 
-  const isAuthenticated = !!accessToken;
+  const isAuthenticated = Boolean(localStorage.getItem("isLoggedIn"));
 
-  const user = (() => {
-    if (!accessToken) return null;
-    try {
-      return jwtDecode(accessToken);
-    } catch {
-      return null;
+  const login = async (credentials) => {
+    const resultAction = await dispatch(loginUser(credentials));
+    
+    if (loginUser.fulfilled.match(resultAction)) {
+      // Login succesful
+      localStorage.setItem("isLoggedIn", true);
+      return resultAction.payload; 
+    } else {
+      // Raise Exception
+      const errorMessage = resultAction.payload?.detail || 
+                          resultAction.payload?.non_field_errors?.[0] || 
+                          resultAction.error?.message || 
+                          'Error de login';
+      throw new Error(errorMessage);
     }
-  })();
-
-  const hasRole = (role) => {
-    return user?.rol === role || user?.roles?.includes?.(role);
   };
 
-  const login = async ({ username, password }) => {
+  const register = async (userData) => {
+    const resultAction = await dispatch(registerUser(userData));
+    
+    if (registerUser.fulfilled.match(resultAction)) {
+      // Register succesful
+      return resultAction.payload;
+    } else {
+      // Raise Exception
+      const errorData = resultAction.payload;
+      
+      // Customize some common register errors
+
+      let errorMessage = 'Error en el registro';
+      
+      if (typeof errorData === 'object' && errorData !== null) {
+        if (errorData.username) {
+          errorMessage = Array.isArray(errorData.username) 
+            ? errorData.username[0] 
+            : errorData.username;
+        } else if (errorData.email) {
+          errorMessage = Array.isArray(errorData.email) 
+            ? errorData.email[0] 
+            : errorData.email;
+        } else if (errorData.password) {
+          errorMessage = Array.isArray(errorData.password) 
+            ? errorData.password[0] 
+            : errorData.password;
+        } else if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.non_field_errors) {
+          errorMessage = Array.isArray(errorData.non_field_errors)
+            ? errorData.non_field_errors[0]
+            : errorData.non_field_errors;
+        }
+      } else if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (resultAction.error?.message) {
+        errorMessage = resultAction.error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  };
+
+  const doLogout = async () => {
     try {
-      const res = await fetch(`${API_URL}/token/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setAccessToken(data.access);
-        localStorage.setItem("isLoggedIn", true); // Save session
-        return { success: true };
+      const resultAction = await dispatch(logoutUser());
+      
+      if (logoutUser.fulfilled.match(resultAction)) {
+        // Logout succesful
+        navigate("/");
+        localStorage.removeItem("isLoggedIn");
+        return resultAction.payload;
       } else {
-        return {
-          success: false,
-          error: data.detail || "Credenciales incorrectas",
-        };
+        // Logout fails in server, but we dispose in client anyway
+        navigate("/");
+        localStorage.removeItem("isLoggedIn");
+        
+        const errorMessage = resultAction.payload?.detail || 
+                            resultAction.error?.message || 
+                            'Error durante el logout';
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      return { success: false, error: "Error de red" };
+      // Logout fails in server, but we dispose in client anyway
+      navigate("/");
+      localStorage.removeItem("isLoggedIn");
+      throw error;
     }
   };
 
-  const logout = async () => {
-    try {
-      localStorage.removeItem("isLoggedIn"); // Clean session
-      await contextLogout();
-    } catch (e) {
-      console.warn("Error cerrando sesión", e);
-    }
-  };
-
-  const register = async ({ username, email, password }) => {
-    try {
-      const res = await fetch(`${API_URL}/register/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        return { success: true };
-      } else {
-        return { success: false, error: data.detail || "Error al registrar" };
-      }
-    } catch (error) {
-      return { success: false, error: "Error de red" };
-    }
-  };
 
   return {
-    accessToken,
-    isAuthenticated,
     user,
-    hasRole,
+    accessToken,
+    status,
+    isAuthenticated,
     login,
-    logout,
     register,
-    API_URL
+    doLogout,
+    
   };
 };
-
 export default useAuth;

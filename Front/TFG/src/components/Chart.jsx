@@ -1,18 +1,18 @@
-import React, { useState, useContext } from 'react';
-import useAuth from '../hooks/useAuth';
+import { useState } from 'react';
+
 
 const ChartDemo = () => {
     
     const [chartImage, setChartImage] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const {API_URL} = useAuth();
+    const API_URL = import.meta.env.VITE_API_URL;
 
     const generateChart = async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_URL}/generar-grafica/`, {
+            const response = await fetch(`${API_URL}/generar-grafica`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -1,15 +1,14 @@
-import useAuth from '../hooks/useAuth';
+import { useEffect } from "react";
+import  useAuth  from "../hooks/useAuth";
 
 const Logout = () => {
-  const { logout, isAuthenticated } = useAuth();
+  const { doLogout } = useAuth();
 
-  if (!isAuthenticated) return null;
+  useEffect(() => {
+    doLogout();
+  }, [doLogout]);
 
-  return (
-    <button onClick={logout}>
-      Cerrar sesión
-    </button>
-  );
+  return null;
 };
 
 export default Logout;
