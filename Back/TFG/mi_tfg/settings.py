@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'nombre_pendiente.apps.NombrePendienteConfig',
+    'cuestamarket.apps.CuestamarketConfig'
 ]
 
 MIDDLEWARE = [
@@ -156,11 +156,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'
 
-AUTH_USER_MODEL = 'nombre_pendiente.User'
+AUTH_USER_MODEL = 'cuestamarket.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'nombre_pendiente.authentication.CookieJWTAuthentication',
+        'cuestamarket.authentication.CookieJWTAuthentication',
     ),
 }
 

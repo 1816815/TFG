@@ -1,16 +1,27 @@
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
+/**
+ * Component that renders the navigation bar
+ *
+ * It has two different styles depending on whether the user is authenticated or not.
+ * If the user is authenticated, it shows a link to their profile and a button to log out.
+ * If the user is not authenticated, it shows links to log in and sign up.
+ *
+ * @returns {JSX.Element} A JSX element that contains the navigation bar
+ */
 const Navbar = () => {
-  const {  user, doLogout, isAuthenticated } = useAuth();
+  const { user, doLogout, isAuthenticated } = useAuth();
+    const isActive = (path) => {
+    return location.pathname === path ? 'nav-link active' : 'nav-link';
+  };
 
-  
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
       <div className="container-fluid">
         <Link className="navbar-brand" to="/">
-          MiApp
+          CuestaMarket
         </Link>
         <button
           className="navbar-toggler"
@@ -46,10 +57,22 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                {user?.role.name === 'admin' && (
+                {user?.role.name === "admin" && (
                   <li className="nav-item">
                     <Link className="nav-link" to="/admin">
                       Admin Panel
+                    </Link>
+                  </li>
+                )}
+                {(user?.role.name === "client" ||
+                  user?.role.name === "admin") && (
+                  <li className="nav-item">
+                    <Link
+                      className={isActive("/mis-encuestas")}
+                      to="/mis-encuestas"
+                    >
+                      <i className="fas fa-list me-1"></i>
+                      Mis Encuestas
                     </Link>
                   </li>
                 )}
@@ -74,6 +97,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-
-

@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
 
+/**
+ * Component to upload a file to the API and display the result.
+ *
+ * Allows selecting a file through an "file" type input and,
+ * once selected, shows a button to upload the file to the API
+ * and display the result in JSON format.
+ *
+ * @returns {ReactElement} FileUploader component.
+ */
 const FileUploader = () => {
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);

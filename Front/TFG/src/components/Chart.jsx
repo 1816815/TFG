@@ -1,6 +1,10 @@
 import { useState } from 'react';
 
 
+/**
+ * Component that shows a button to generate a chart 
+ * with the test data and shows the generated chart
+ */
 const ChartDemo = () => {
     
     const [chartImage, setChartImage] = useState(null);

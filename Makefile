@@ -17,7 +17,7 @@ back_terminal:
 	docker exec -it ${APP_NAME}_backend bash
 
 front_terminal:
-	docker exec -it ${APP_NAME}_frontend bash
+	docker exec -it ${APP_NAME}_frontend sh
 
 logs:
 	docker compose logs -f

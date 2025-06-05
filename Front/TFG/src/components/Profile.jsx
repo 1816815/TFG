@@ -1,34 +1,31 @@
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import useUser from "../hooks/useUser";
 
 const Profile = () => {
   const { user, doUpdateUser } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState("");
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    role: "",
-  });
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm();
 
   useEffect(() => {
     if (user) {
-      setFormData({
+      reset({
         username: user.username || "",
         email: user.email || "",
-        role: user.role?.name || "",
+        role: user.role?.name || ""
       });
     }
-  }, [user]);
+  }, [user, reset]);
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const result = doUpdateUser(user.id, formData);
+  const onSubmit = async (data) => {
+    const result = await doUpdateUser(user.id, data);
     if (result) {
       setIsEditing(false);
       setMessage("Perfil actualizado correctamente");
@@ -51,25 +48,24 @@ const Profile = () => {
           <button onClick={() => setIsEditing(true)}>Editar Perfil</button>
         </>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <input
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
+            {...register("username", { required: "Usuario es obligatorio" })}
+            placeholder="Usuario"
           />
+          {errors.username && <p>{errors.username.message}</p>}
+
           <input
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
+            type="email"
+            {...register("email", {
+              required: "Email es obligatorio",
+              pattern: { value: /^\S+@\S+$/i, message: "Email inválido" }
+            })}
+            placeholder="Email"
           />
-          <input
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            placeholder="Ej: Admin, Usuario"
-          />
+          {errors.email && <p>{errors.email.message}</p>}
+
+
           <button type="submit">Guardar Cambios</button>
           <button type="button" onClick={() => setIsEditing(false)}>
             Cancelar
@@ -80,6 +76,5 @@ const Profile = () => {
     </div>
   );
 };
-
 
 export default Profile;

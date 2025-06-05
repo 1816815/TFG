@@ -1,141 +1,142 @@
-import { useSelector, useDispatch } from "react-redux";
-import { fetchUserProfile, updateUser, refreshToken } from "../redux/userSlice";
-import { jwtDecode } from "jwt-decode";
+import { useDispatch, useSelector } from "react-redux";
+import { 
+  fetchUserProfile, 
+  updateUser, 
+  loginUser, 
+  refreshToken, 
+  logoutUser, 
+  registerUser,
+  initializeAuth 
+} from "../redux/userSlice";
 
+/**
+ * Custom hook for user-related operations
+ * Provides simplified access to user authentication and profile management
+ */
 const useUser = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user.user);
-  const accessToken = useSelector((state) => state.user.accessToken);
   
-  let userId = null;
-  if (accessToken) {
-    try {        
-      const decoded = jwtDecode(accessToken);
-      userId = decoded.user_id;
-    } catch (e) {
-      console.error("Error decoding token", e);
-    }
-  }
+  const {
+    user,
+    accessToken,
+    isInitialized,
+    isAuthenticated,
+    status,
+    refreshStatus,
+    error,
+    refreshError,
+    registrationStatus,
+    registrationError,
+    logoutStatus,
+    logoutError,
+  } = useSelector((state) => state.user);
 
-  const loadUserProfile = async () => {
-    if (!accessToken) {
-      throw new Error("No hay token de acceso disponible");
-    }
+  // Derived states for easier usage
+  const isLoading = status === "loading";
+  const isRefreshing = refreshStatus === "loading";
+  const isRegistering = registrationStatus === "loading";
+  const isLoggingOut = logoutStatus === "loading";
 
-    const resultAction = await dispatch(fetchUserProfile());
-    
-    if (fetchUserProfile.fulfilled.match(resultAction)) {
-      return resultAction.payload;
-    } else {
-      const errorMessage = resultAction.payload?.detail || 
-                          resultAction.payload?.message ||
-                          resultAction.error?.message || 
-                          'Error al cargar el perfil del usuario';
-      throw new Error(errorMessage);
-    }
-  };
-
-  const doUpdateUser = async (id, data) => {
-    if (!id) {
-      throw new Error("ID de usuario requerido");
-    }
-    
-    if (!data || Object.keys(data).length === 0) {
-      throw new Error("Datos de actualización requeridos");
-    }
-
-    const resultAction = await dispatch(updateUser({ id, data }));
-    
-    if (updateUser.fulfilled.match(resultAction)) {
-      return resultAction.payload;
-    } else {
-      const errorData = resultAction.payload;
-      
-      let errorMessage = 'Error al actualizar el usuario';
-      
-      if (typeof errorData === 'object' && errorData !== null) {
-        
-        if (errorData.email) {
-          errorMessage = Array.isArray(errorData.email) 
-            ? errorData.email[0] 
-            : errorData.email;
-        } else if (errorData.username) {
-          errorMessage = Array.isArray(errorData.username) 
-            ? errorData.username[0] 
-            : errorData.username;
-        } else if (errorData.first_name) {
-          errorMessage = Array.isArray(errorData.first_name) 
-            ? errorData.first_name[0] 
-            : errorData.first_name;
-        } else if (errorData.last_name) {
-          errorMessage = Array.isArray(errorData.last_name) 
-            ? errorData.last_name[0] 
-            : errorData.last_name;
-        } else if (errorData.detail) {
-          errorMessage = errorData.detail;
-        } else if (errorData.non_field_errors) {
-          errorMessage = Array.isArray(errorData.non_field_errors)
-            ? errorData.non_field_errors[0]
-            : errorData.non_field_errors;
-        }
-      } else if (typeof errorData === 'string') {
-        errorMessage = errorData;
-      } else if (resultAction.error?.message) {
-        errorMessage = resultAction.error.message;
-      }
-      
-      throw new Error(errorMessage);
-    }
-  };
-
-  const doRefreshToken = async () => {
-    const resultAction = await dispatch(refreshToken());
-    
-    if (refreshToken.fulfilled.match(resultAction)) {
-      return resultAction.payload;
-    } else {
-      const errorMessage = resultAction.payload?.detail || 
-                          resultAction.payload?.message ||
-                          resultAction.error?.message || 
-                          'Error al renovar el token';
-      throw new Error(errorMessage);
-    }
-  };
-
-  // Helper to validate expiring time
-  const isTokenExpiringSoon = (minutesThreshold = 5) => {
-    if (!accessToken) return true;
-    
+  // Initialize authentication
+  const initAuth = async () => {
     try {
-      const decoded = jwtDecode(accessToken);
-      const currentTime = Date.now() / 1000;
-      const timeUntilExpiry = decoded.exp - currentTime;
-      const minutesUntilExpiry = timeUntilExpiry / 60;
-      
-      return minutesUntilExpiry <= minutesThreshold;
-    } catch (e) {
-      console.error("Error checking token expiry", e);
-      return true;
+      const result = await dispatch(initializeAuth()).unwrap();
+      return result;
+    } catch (error) {
+      console.error("Error initializing auth:", error);
+      throw error;
     }
   };
 
-  // Function to automatically update token if needed
-  const refreshTokenIfNeeded = async () => {
-    if (isTokenExpiringSoon()) {
-      return await doRefreshToken();
+  // Load user profile
+  const loadUserProfile = async () => {
+    try {
+      const result = await dispatch(fetchUserProfile()).unwrap();
+      return result;
+    } catch (error) {
+      console.error("Error loading user profile:", error);
+      throw error;
     }
-    return accessToken;
+  };
+
+  // Login user
+  const login = async (credentials) => {
+    try {
+      const result = await dispatch(loginUser(credentials)).unwrap();
+      return result;
+    } catch (error) {
+      console.error("Error logging in:", error);
+      throw error;
+    }
+  };
+
+  // Refresh access token
+  const doRefreshToken = async () => {
+    try {
+      const result = await dispatch(refreshToken()).unwrap();
+      return { accessToken: result };
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      throw error;
+    }
+  };
+
+  // Update user profile
+  const updateUserProfile = async (id, data) => {
+    try {
+      const result = await dispatch(updateUser({ id, data })).unwrap();
+      return result;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  };
+
+  // Logout user
+  const logout = async () => {
+    try {
+      const result = await dispatch(logoutUser()).unwrap();
+      return result;
+    } catch (error) {
+      console.error("Error logging out:", error);
+      throw error;
+    }
+  };
+
+  // Register user
+  const register = async (credentials) => {
+    try {
+      const result = await dispatch(registerUser(credentials)).unwrap();
+      return result;
+    } catch (error) {
+      console.error("Error registering user:", error);
+      throw error;
+    }
   };
 
   return {
+    // State
     user,
-    userId,
     accessToken,
+    isInitialized,
+    isAuthenticated,
+    isLoading,
+    isRefreshing,
+    isRegistering,
+    isLoggingOut,
+    error,
+    refreshError,
+    registrationError,
+    logoutError,
+    
+    // Actions
+    initAuth,
     loadUserProfile,
-    doUpdateUser,
+    login,
+    logout,
+    register,
+    updateUserProfile,
     doRefreshToken,
-    isTokenExpiringSoon,
-    refreshTokenIfNeeded
   };
 };
 

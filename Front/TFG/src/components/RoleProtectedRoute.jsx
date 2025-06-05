@@ -3,11 +3,25 @@ import { useSelector } from "react-redux";
 import useUser from "../hooks/useUser";
 import { Navigate, Outlet } from "react-router-dom";
 
-const AdminProtectedRoute = ({ allowedRoles }) => {
+/**
+ * A component that restricts access based on user roles and authentication status.
+ *
+ * @param {Object} props - The component props.
+ * @param {Array} props.allowedRoles - An array of roles that are permitted to access the route.
+ *
+ * @returns {JSX.Element} - A component that either renders the nested routes or redirects to a login page if the user is not authenticated or does not have the required role.
+ *
+ * The component checks the user's authentication status and role to determine access.
+ * If the user is not logged in, it redirects to the login page.
+ * If the user does not have the required role, it redirects to the home page.
+ * Displays a loading screen while determining the access status.
+ */
+
+const RoleProtectedRoute = ({ allowedRoles }) => {
   const { user } = useUser();
   const [isReady, setIsReady] = useState(false);
   const accessToken = useSelector((state) => state.user.accessToken);
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const isLoggedIn = localStorage.getItem("accessToken");
 
   useEffect(() => {
     let timer;
@@ -70,4 +84,4 @@ const AdminProtectedRoute = ({ allowedRoles }) => {
   return <Outlet />;
 };
 
-export default AdminProtectedRoute;
+export default RoleProtectedRoute;

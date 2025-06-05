@@ -1,76 +1,74 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import useAuth from "../hooks/useAuth";
+import useUser from "../hooks/useUser";
+
+/**
+ * Auth component handles user authentication by providing login and registration functionality.
+ *
+ * It uses `useAuth` to access login and register methods, `useLocation` to determine the current
+ * route, and `useNavigate` for navigation. React Hook Form is used for form handling.
+ *
+ * The component switches between login and registration modes based on the URL path (`/login` or `/register`).
+ * If the URL is not either of these, it displays a "Page not found" message.
+ *
+ * On form submission, it attempts to log in or register the user, then navigates to the home page
+ * if successful, or displays an error message on failure.
+ *
+ * A button allows toggling between login and registration modes.
+ *
+ * @returns {JSX.Element} - The authentication form with inputs for username, email (on registration),
+ * and password. Displays error messages and a toggle button.
+ */
 
 const Auth = () => {
-  const { login, register } = useAuth();
+  const { register: registerUser } = useAuth();
+  const {login} = useUser();
   const location = useLocation();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    rol: "",
-  });
 
-  // Decide action based on URL
   const isRegisterMode = location.pathname === "/register";
   const isLoginMode = location.pathname === "/login";
 
-  // Clean message on URL change
+  // React Hook Form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors }
+  } = useForm();
+
+  // Clean message and reset form on URL change
   useEffect(() => {
     setMessage("");
-    // Reset form on change
-    setFormData({
-      username: "",
-      email: "",
-      password: "",
-      rol: "",
-    });
-  }, [location.pathname]);
+    reset();
+  }, [location.pathname, reset]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const onSubmit = async (data) => {
     try {
       if (isRegisterMode) {
-        await register(formData);
-        await login({ username: formData.username, password: formData.password });
+        await registerUser(data);
+        await login({ username: data.username, password: data.password });
       } else if (isLoginMode) {
-        await login(formData);
+        await login(data);
       }
-
-      // Redirect to home after succesful action
       navigate("/");
     } catch (error) {
-      // Handle errors
       if (error == "Error: No active account found with the given credentials") {
-      setMessage("Usuario o contraseña incorrectos.");
-      console.log(error);
+        setMessage("Usuario o contraseña incorrectos.");
       } else {
-         setMessage("Error en la operación. Por favor, intenta de nuevo.");
-         console.log(error);
+        setMessage("Error en la operación. Por favor, intenta de nuevo.");
       }
-
-
+      console.log(error);
     }
   };
 
   const toggleMode = () => {
-    // Navigate between login and register
-    if (isRegisterMode) {
-      navigate("/login");
-    } else {
-      navigate("/register");
-    }
+    navigate(isRegisterMode ? "/login" : "/register");
   };
 
-  // Fallback message
   if (!isRegisterMode && !isLoginMode) {
     return <div>Página no encontrada</div>;
   }
@@ -78,38 +76,40 @@ const Auth = () => {
   return (
     <div className="auth-form">
       <h2>{isRegisterMode ? "Registro" : "Login"}</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <input
           type="text"
-          name="username"
           placeholder="Usuario"
-          value={formData.username}
-          onChange={handleChange}
-          required
+          {...register("username", { required: "El usuario es obligatorio" })}
         />
+        {errors.username && <p>{errors.username.message}</p>}
+
         {isRegisterMode && (
-          <input
-            type="email"
-            name="email"
-            placeholder="Correo electrónico"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+          <>
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              {...register("email", {
+                required: "El correo es obligatorio",
+                pattern: { value: /^\S+@\S+$/i, message: "Correo inválido" }
+              })}
+            />
+            {errors.email && <p>{errors.email.message}</p>}
+          </>
         )}
+
         <input
           type="password"
-          name="password"
           placeholder="Contraseña"
-          value={formData.password}
-          onChange={handleChange}
-          required
+          {...register("password", { required: "La contraseña es obligatoria" })}
         />
-        <button type="submit">
-          {isRegisterMode ? "Registrarse" : "Iniciar sesión"}
-        </button>
+        {errors.password && <p>{errors.password.message}</p>}
+
+        <button type="submit">{isRegisterMode ? "Registrarse" : "Iniciar sesión"}</button>
       </form>
+
       {message && <p style={{ marginTop: "10px" }}>{message}</p>}
+
       <button onClick={toggleMode}>
         Cambiar a {isRegisterMode ? "Login" : "Registro"}
       </button>

@@ -1,186 +1,71 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { jwtDecode } from "jwt-decode";
+import { useEffect, useRef } from "react";
 import useUser from "../hooks/useUser";
 
 const AppInitializer = ({ children }) => {
-  const dispatch = useDispatch();
-  const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
-  
-  const accessToken = useSelector((state) => state.user.accessToken);
-  const user = useSelector((state) => state.user.user);
-  const isLoadingUser = useSelector((state) => state.user.isLoading);
-  
   const { loadUserProfile, doRefreshToken } = useUser();
-  
-  const refreshIntervalRef = useRef(null);
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const refreshTimeout = useRef(null);
 
-  // Validating token
-  const isTokenValid = useCallback((token) => {
-    if (!token) return false;
-    
+  // Decodifica el JWT y extrae el campo exp
+  function decodeExpFromToken(token) {
     try {
-      const payload = jwtDecode(token);
-      const now = Math.floor(Date.now() / 1000);
-      
-      return payload.exp && (payload.exp - now) > 300;
-    } catch (error) {
-      console.error("Error al verificar token:", error);
-      return false;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000;
+    } catch {
+      return null;
     }
-  }, []);
-
-  // Cleaning state
-  const clearAuthState = useCallback(() => {
-    localStorage.removeItem("isLoggedIn");
-
-    if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
-    }
-    dispatch({ type: 'user/clearUser' });
-  }, [dispatch]);
-
-  // Setting automatic refresh
-  const setupTokenRefresh = useCallback(() => {
-    if (!isLoggedIn || !accessToken) return;
-
-    if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
-    }
-
-    console.log("Configurando refresh automático");
-    refreshIntervalRef.current = setInterval(async () => {
-      try {
-        console.log("Ejecutando refresh automático...");
-        await doRefreshToken();
-        console.log("Token refresh automático exitoso");
-      } catch (error) {
-        console.error("Error en refresh automático:", error);
-        clearAuthState();
-      }
-    }, 15 * 60 * 1000);
-  }, [isLoggedIn, accessToken, doRefreshToken, clearAuthState]);
-
-  // Initialize
-  useEffect(() => {
-    if (initialized) return;
-
-    const initializeApp = async () => {
-      try {
-        console.log("=== INICIALIZANDO APP ===");
-        console.log("isLoggedIn:", isLoggedIn);
-        console.log("accessToken en Redux:", !!accessToken);
-        console.log("user en Redux:", !!user);
-        
-        setLoading(true);
-
-        if (!isLoggedIn) {
-          console.log("No hay sesión activa");
-          setLoading(false);
-          setInitialized(true);
-          return;
-        }
-
-        // Refresh if current token is no longer valid
-        let currentToken = accessToken;
-
-        if (!currentToken || !isTokenValid(currentToken)) {
-          console.log("Token inválido o inexistente, refrescando...");
-          try {
-            const refreshResult = await doRefreshToken();
-            currentToken = refreshResult?.accessToken;
-            console.log("Token refrescado exitosamente");
-          } catch (error) {
-            console.warn("No se pudo refrescar el token:", error.message);
-            clearAuthState();
-            setLoading(false);
-            setInitialized(true);
-            return;
-          }
-        } else {
-          console.log("Token válido encontrado, saltando refresh");
-          // Check if Redux has the token
-          if (!accessToken && currentToken) {
-            dispatch({ type: 'user/setTokens', payload: { accessToken: currentToken } });
-          }
-        }
-
-        // Only load user if it is on Redux
-        if (!user && currentToken) {
-          console.log("Usuario no encontrado en Redux, cargando...");
-          try {
-            await loadUserProfile();
-            console.log("Perfil cargado exitosamente");
-          } catch (error) {
-            console.warn("No se pudo cargar el perfil:", error.message);
-            clearAuthState();
-            setLoading(false);
-            setInitialized(true);
-            return;
-          }
-        } else if (user) {
-          console.log("Usuario ya existe en Redux, saltando carga");
-        }
-
-        console.log("=== INICIALIZACIÓN COMPLETADA ===");
-
-      } catch (error) {
-        console.error("Error al inicializar app:", error);
-        clearAuthState();
-      } finally {
-        setLoading(false);
-        setInitialized(true);
-      }
-    };
-
-    initializeApp();
-  }, [initialized, isLoggedIn, accessToken, user, doRefreshToken, loadUserProfile, clearAuthState, isTokenValid, dispatch]);
-
-  // Set up token refresh interval
-
-  useEffect(() => {
-    if (initialized && accessToken && isLoggedIn) {
-      setupTokenRefresh();
-    }
-    
-    return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-      }
-    };
-  }, [initialized, accessToken, isLoggedIn, setupTokenRefresh]);
-
-  // Logout listener
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === "isLoggedIn" && e.newValue !== "true") {
-        console.log("Logout detectado desde otra pestaña");
-        clearAuthState();
-        setInitialized(false);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [clearAuthState]);
-
-  if (loading || isLoadingUser) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <div>Cargando aplicación...</div>
-      </div>
-    );
   }
 
-  return children;
+  async function initializeSession() {
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) return;
+
+    try {
+      await loadUserProfile();
+      localStorage.setItem("isLoggedIn", "true");
+
+      const exp = decodeExpFromToken(accessToken);
+      if (exp) {
+        const now = Date.now();
+        const timeout = exp - now - 30 * 1000; // Refrescar 30 segundos antes de expirar
+
+        if (timeout > 0) {
+          refreshTimeout.current = setTimeout(refreshTokenFlow, timeout);
+        } else {
+          await refreshTokenFlow(); // Si ya expiró o está por expirar, refrescar ya
+        }
+      }
+    } catch (err) {
+      console.error("Fallo al cargar perfil:", err.message);
+      await refreshTokenFlow();
+    }
+  }
+
+  async function refreshTokenFlow() {
+    try {
+      const newToken = await doRefreshToken();
+      if (newToken?.accessToken) {
+        localStorage.setItem("accessToken", newToken.accessToken);
+        await initializeSession(); // Volver a configurar el nuevo timeout
+      } else {
+        localStorage.removeItem("isLoggedIn");
+        console.warn("No se recibió un nuevo accessToken");
+      }
+    } catch (error) {
+      console.error("Error al refrescar token:", error.message);
+      localStorage.removeItem("isLoggedIn");
+    }
+  }
+
+  useEffect(() => {
+    initializeSession();
+
+    return () => {
+      if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
+    };
+  }, []);
+
+  return <>{children}</>;
 };
 
 export default AppInitializer;

@@ -2,6 +2,15 @@ import { useEffect, useState } from 'react';
 import useUser from '../hooks/useUser';
 
 
+/**
+ * The admin panel component.
+ *
+ * This component renders the admin panel, which shows the list of users and allows
+ * the user to create, edit and delete users.
+ *
+ * @function
+ * @returns {ReactElement} The admin panel component.
+ */
 function AdminPanel() {
   const API_URL = import.meta.env.VITE_API_URL;
   const { user, accessToken }=useUser();
@@ -17,6 +26,12 @@ function AdminPanel() {
     'Content-Type': 'application/json',
   };
 
+  /**
+   * Fetches data from the given endpoint and sets it with the provided setter function.
+   * @param {string} endpoint - The API endpoint to fetch from.
+   * @param {function} setter - The function to call with the fetched data.
+   * @throws {Error} If the request fails or the response is not OK.
+   */
   const fetchData = async (endpoint, setter) => {
     try {
       const res = await fetch(`${API_URL}${endpoint}`, { headers, credentials: 'include' });
@@ -29,6 +44,11 @@ function AdminPanel() {
     }
   };
 
+  /**
+   * Fetches the list of users from the server and updates the state with the received data.
+   * The received data is normalized to ensure that the `is_active` field is always present and
+   * has a boolean value.
+   */
   const fetchUsers = async () => {
     await fetchData('/admin/users/', data => {
       const normalizedUsers = data.map(user => ({
@@ -47,6 +67,10 @@ function AdminPanel() {
     
   }, []);
 
+  /**
+   * Sets the editing user to the given user, ready to edit.
+   * @param {Object} user - The user to edit.
+   */
   const handleEdit = (user) => {
     setEditingUser({
       ...user,
@@ -55,6 +79,9 @@ function AdminPanel() {
     });
   };
 
+  /**
+   * Resets the editing user to a blank slate, ready to create a new user.
+   */
   const handleCreate = () => {
     setEditingUser({
       username: '',
@@ -66,6 +93,10 @@ function AdminPanel() {
     });
   };
 
+  /**
+   * Cancel the editing process and reset the error state
+   * @function
+   */
   const handleCancel = () => {
     setEditingUser(null);
     setError(null);

@@ -1,16 +1,20 @@
-# views/__init__.py
+"""
+Export every view and class from this module.
+
+"""
 
 from .auth_views import (
     RegisterView,
     CustomTokenObtainPairView,
     CookieTokenRefreshView,
     LogoutView,
+    IsAdmin,
+    IsClient
 )
 
 from .admin_views import (
     UserAdminViewSet,
     RoleListView,
-    IsAdminUserRole,
 )
 
 from .profile_views import (
@@ -25,20 +29,32 @@ from .misc_views import (
     prueba_conexion,
 )
 
-# Reexportar explícitamente para autocompletado y limpieza
+from .survey_views import (
+    SurveyViewSet,
+    SurveyInstanceViewSet,
+    SurveyConfigurationViewSet,
+    SurveyPublicAPIView,
+    SurveySubmissionAPIView,
+    ParticipationResultsAPIView
+)
+
 __all__ = [
     # Auth
     "RegisterView", "CustomTokenObtainPairView", "CookieTokenRefreshView", "LogoutView",
 
     # Admin
-    "UserAdminViewSet", "RoleListView", "IsAdminUserRole",
+    "UserAdminViewSet", "RoleListView", "IsAdmin",
 
-    # Perfil
+    # Profile
     "UserProfileView",
 
-    # Gráficas
+    # Graph
     "generar_grafica",
 
-    # Misceláneo
+    # Misc
     "prueba_conexion",
+
+    # Survey
+    "SurveyViewSet", "IsClient", "SurveyInstanceViewSet", "SurveyConfigurationViewSet"
 ]
+
