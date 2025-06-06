@@ -187,6 +187,12 @@ class SurveyInstanceViewSet(viewsets.ModelViewSet):
             'state': instance.state,
             'questions_statistics': questions_stats
         })
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny], url_path='public/open')
+    def public_open_instances(self, request):
+        """Endpoint público: listar instancias de encuesta abiertas"""
+        open_instances = SurveyInstance.objects.filter(state='open')
+        serializer = self.get_serializer(open_instances, many=True)
+        return Response(serializer.data)
 
 class SurveyConfigurationViewSet(viewsets.ViewSet):
     """ViewSet para configuraciones avanzadas de encuestas"""

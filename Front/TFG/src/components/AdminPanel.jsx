@@ -1,176 +1,186 @@
-import { useEffect, useState } from 'react';
-import useUser from '../hooks/useUser';
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import useUser from "../hooks/useUser";
 
-
-/**
- * The admin panel component.
- *
- * This component renders the admin panel, which shows the list of users and allows
- * the user to create, edit and delete users.
- *
- * @function
- * @returns {ReactElement} The admin panel component.
- */
 function AdminPanel() {
   const API_URL = import.meta.env.VITE_API_URL;
-  const { user, accessToken }=useUser();
+  const { user, accessToken } = useUser();
 
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [error, setError] = useState(null);
   const [showInactive, setShowInactive] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    handleSubmit,
+    control,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      role_id: "",
+      is_active: true,
+    },
+  });
 
   const headers = {
-    'Authorization': `Bearer ${accessToken}`,
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
 
-  /**
-   * Fetches data from the given endpoint and sets it with the provided setter function.
-   * @param {string} endpoint - The API endpoint to fetch from.
-   * @param {function} setter - The function to call with the fetched data.
-   * @throws {Error} If the request fails or the response is not OK.
-   */
   const fetchData = async (endpoint, setter) => {
     try {
-      const res = await fetch(`${API_URL}${endpoint}`, { headers, credentials: 'include' });
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        headers,
+        credentials: "include",
+      });
       if (!res.ok) throw new Error(JSON.stringify(await res.json()));
       const data = await res.json();
       setter(data);
     } catch (err) {
-      console.error(`Error loading ${endpoint}:`, err);
-      setError(`Error cargando datos: ${err.message}`);
+      setError(`Error cargando ${endpoint}: ${err.message}`);
     }
   };
 
-  /**
-   * Fetches the list of users from the server and updates the state with the received data.
-   * The received data is normalized to ensure that the `is_active` field is always present and
-   * has a boolean value.
-   */
   const fetchUsers = async () => {
-    await fetchData('/admin/users/', data => {
-      const normalizedUsers = data.map(user => ({
-        ...user,
-        is_active: user.is_active !== undefined ? user.is_active : true,
+    await fetchData("/admin/users/", (data) => {
+      const normalized = data.map((u) => ({
+        ...u,
+        is_active: u.is_active !== undefined ? u.is_active : true,
       }));
-      setUsers(normalizedUsers);
+      setUsers(normalized);
     });
   };
 
-  const fetchRoles = () => fetchData('/roles', setRoles);
+  const fetchRoles = () => fetchData("/roles", setRoles);
 
   useEffect(() => {
-      fetchUsers();
-      fetchRoles();
-    
+    fetchUsers();
+    fetchRoles();
   }, []);
 
-  /**
-   * Sets the editing user to the given user, ready to edit.
-   * @param {Object} user - The user to edit.
-   */
   const handleEdit = (user) => {
-    setEditingUser({
-      ...user,
-      role_id: user.role?.id || '',
-      isNewUser: false,
+    reset({
+      username: user.username,
+      email: user.email,
+      role_id: user.role?.id || "",
+      is_active: user.is_active,
     });
+    setEditingUser({ ...user, isNewUser: false });
   };
 
-  /**
-   * Resets the editing user to a blank slate, ready to create a new user.
-   */
   const handleCreate = () => {
-    setEditingUser({
-      username: '',
-      email: '',
-      role_id: '',
-      password: '',
+    reset({
+      username: "",
+      email: "",
+      password: "",
+      role_id: "",
       is_active: true,
-      isNewUser: true,
     });
+    setEditingUser({ isNewUser: true });
   };
 
-  /**
-   * Cancel the editing process and reset the error state
-   * @function
-   */
   const handleCancel = () => {
+    reset();
     setEditingUser(null);
     setError(null);
   };
 
   const handleToggleActive = async (user) => {
-    const action = user.is_active ? 'deactivate' : 'activate';
-    if (!window.confirm(`¿Estás seguro de ${user.is_active ? 'desactivar' : 'activar'} este usuario?`)) return;
+    const action = user.is_active ? "deactivate" : "activate";
+    if (
+      !window.confirm(
+        `¿Estás seguro de ${user.is_active ? "desactivar" : "activar"} este usuario?`
+      )
+    )
+      return;
     try {
-      const res = await fetch(`${API_URL}/admin/users/${user.id}/${action}/`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-      });
+      const res = await fetch(
+        `${API_URL}/admin/users/${user.id}/${action}/`,
+        {
+          method: "POST",
+          headers,
+          credentials: "include",
+        }
+      );
       if (!res.ok) throw new Error(JSON.stringify(await res.json()));
       fetchUsers();
-      setError(null);
     } catch (err) {
-      console.error(`Error al ${action} usuario:`, err);
-      setError(`Error al ${action === 'activate' ? 'activar' : 'desactivar'} usuario: ${err.message}`);
+      setError(`Error al ${action} usuario: ${err.message}`);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (formData) => {
+    setIsSubmitting(true);
     setError(null);
-    const isEdit = Boolean(editingUser.id);
-    const method = isEdit ? 'PUT' : 'POST';
-    const url = isEdit ? `${API_URL}/admin/users/${editingUser.id}/` : `${API_URL}/admin/users/`;
-    const selectedRole = roles.find(r => r.id === parseInt(editingUser.role_id));
+
+    const isEdit = editingUser && !editingUser.isNewUser;
+    const method = isEdit ? "PUT" : "POST";
+    const url = isEdit
+      ? `${API_URL}/admin/users/${editingUser.id}/`
+      : `${API_URL}/admin/users/`;
 
     const payload = {
-      username: editingUser.username,
-      email: editingUser.email,
-      role_id: selectedRole?.id || null,
-      is_active: editingUser.is_active ?? true,
-      ...(editingUser.isNewUser && editingUser.password ? { password: editingUser.password } : {}),
+      username: formData.username,
+      email: formData.email,
+      role_id: parseInt(formData.role_id),
+      is_active: formData.is_active,
+      ...(editingUser?.isNewUser && formData.password
+        ? { password: formData.password }
+        : {}),
     };
 
     try {
       const res = await fetch(url, {
         method,
         headers,
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(JSON.stringify(await res.json()));
       setEditingUser(null);
+      reset();
       fetchUsers();
     } catch (err) {
-      console.error('Error al guardar usuario:', err);
       setError(`Error al guardar usuario: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const filteredUsers = showInactive ? users : users.filter(u => u.is_active);
+  const filteredUsers = showInactive
+    ? users
+    : users.filter((u) => u.is_active);
 
   return (
-    <div className="admin-panel">
+    <div className="container mt-4">
       <h2>Gestión de Usuarios</h2>
 
       {error && (
-        <div className="error-message">
+        <div className="alert alert-danger">
           <p>{error}</p>
-          <button onClick={() => setError(null)}>Cerrar</button>
+          <button className="btn btn-sm btn-danger" onClick={() => setError(null)}>
+            Cerrar
+          </button>
         </div>
       )}
 
       {!editingUser ? (
-        <div className="panel-actions">
-          <button onClick={handleCreate}>Crear Nuevo Usuario</button>
-          <label>
+        <div className="d-flex gap-3 mb-3">
+          <button className="btn btn-primary" onClick={handleCreate}>
+            Crear Nuevo Usuario
+          </button>
+          <label className="form-check-label">
             <input
               type="checkbox"
+              name="showInactive"
+              id="showInactive"
+              className="form-check-input"
               checked={showInactive}
               onChange={() => setShowInactive(!showInactive)}
             />
@@ -178,70 +188,153 @@ function AdminPanel() {
           </label>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="form-container">
-          <h3>{editingUser.isNewUser ? 'Crear Usuario' : 'Editar Usuario'}</h3>
-          <input
-            type="text"
-            placeholder="Nombre de usuario"
-            value={editingUser.username}
-            onChange={e => setEditingUser({ ...editingUser, username: e.target.value })}
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={editingUser.email}
-            onChange={e => setEditingUser({ ...editingUser, email: e.target.value })}
-            required
-          />
-          <select
-            value={editingUser.role_id}
-            onChange={e => setEditingUser({ ...editingUser, role_id: e.target.value })}
-            required
-          >
-            <option value="">Seleccionar rol</option>
-            {roles.map(role => (
-              <option key={role.id} value={role.id}>{role.name}</option>
-            ))}
-          </select>
-          {editingUser.isNewUser && (
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={editingUser.password}
-              onChange={e => setEditingUser({ ...editingUser, password: e.target.value })}
-              required
+        <form onSubmit={handleSubmit(onSubmit)} className="card p-4 mb-4">
+          <h4>{editingUser.isNewUser ? "Crear Usuario" : "Editar Usuario"}</h4>
+
+          <div className="mb-3">
+            <label htmlFor="username" className="form-label">Nombre de usuario</label>
+            <Controller
+              name="username"
+              control={control}
+              rules={{ required: "El nombre de usuario es obligatorio" }}
+              render={({ field }) => (
+                <input {...field} className="form-control" id="username" />
+              )}
             />
-          )}
-          {!editingUser.isNewUser && (
-            <label>
-              <input
-                type="checkbox"
-                checked={editingUser.is_active}
-                onChange={e => setEditingUser({ ...editingUser, is_active: e.target.checked })}
+            {errors.username && <p className="text-danger">{errors.username.message}</p>}
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label">Correo electrónico</label>
+            <Controller
+              name="email"
+              control={control}
+              rules={{
+                required: "El correo es obligatorio",
+                pattern: {
+                  value: /^\S+@\S+\.\S+$/,
+                  message: "Correo inválido",
+                },
+              }}
+              render={({ field }) => (
+                <input {...field} className="form-control" id="email" />
+              )}
+            />
+            {errors.email && <p className="text-danger">{errors.email.message}</p>}
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="role_id" className="form-label">Rol</label>
+            <Controller
+              name="role_id"
+              control={control}
+              rules={{ required: "El rol es obligatorio" }}
+              render={({ field }) => (
+                <select {...field} className="form-select" id="role_id">
+                  <option value="">Seleccionar rol</option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+            {errors.role_id && <p className="text-danger">{errors.role_id.message}</p>}
+          </div>
+
+          {editingUser.isNewUser && (
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label">Contraseña</label>
+              <Controller
+                name="password"
+                control={control}
+                rules={{
+                  required: "La contraseña es obligatoria",
+                  minLength: {
+                    value: 6,
+                    message: "Mínimo 6 caracteres",
+                  },
+                }}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="password"
+                    className="form-control"
+                    id="password"
+                  />
+                )}
               />
-              Usuario activo
-            </label>
+              {errors.password && (
+                <p className="text-danger">{errors.password.message}</p>
+              )}
+            </div>
           )}
-          <button type="submit">{editingUser.isNewUser ? 'Crear' : 'Actualizar'}</button>
-          <button type="button" onClick={handleCancel}>Cancelar</button>
+
+          {!editingUser.isNewUser && (
+            <div className="form-check mb-3">
+              <Controller
+                name="is_active"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="checkbox"
+                    className="form-check-input"
+                    id="is_active"
+                    checked={field.value}
+                  />
+                )}
+              />
+              <label className="form-check-label" htmlFor="is_active">
+                Usuario activo
+              </label>
+            </div>
+          )}
+
+          <div className="d-flex gap-2">
+            <button type="submit" className="btn btn-success" disabled={isSubmitting}>
+              {isSubmitting
+                ? editingUser.isNewUser
+                  ? "Creando..."
+                  : "Actualizando..."
+                : editingUser.isNewUser
+                ? "Crear"
+                : "Actualizar"}
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+              Cancelar
+            </button>
+          </div>
         </form>
       )}
 
-      <hr />
-
-      <ul className="users-list">
+      <ul className="list-group">
         {filteredUsers.length === 0 ? (
-          <p>No hay usuarios {showInactive ? '' : 'activos'}.</p>
+          <p className="mt-3">No hay usuarios {showInactive ? "" : "activos"}.</p>
         ) : (
-          filteredUsers.map(user => (
-            <li key={user.id} className={user.is_active ? '' : 'inactive'}>
-              <strong>{user.username}</strong> ({user.email}) - {user.role?.name || 'Sin rol'}
-              {!user.is_active && <span> (Inactivo)</span>}
-              <button onClick={() => handleEdit(user)}>Editar</button>
-              <button onClick={() => handleToggleActive(user)}>
-                {user.is_active ? 'Desactivar' : 'Activar'}
-              </button>
+          filteredUsers.map((u) => (
+            <li
+              key={u.id}
+              className={`list-group-item d-flex justify-content-between align-items-center ${
+                !u.is_active ? "list-group-item-secondary" : ""
+              }`}
+            >
+              <div>
+                <strong>{u.username}</strong> ({u.email}) - {u.role?.name || "Sin rol"}
+                {!u.is_active && <span className="text-muted"> (Inactivo)</span>}
+              </div>
+              <div className="btn-group">
+                <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(u)}>
+                  Editar
+                </button>
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={() => handleToggleActive(u)}
+                >
+                  {u.is_active ? "Desactivar" : "Activar"}
+                </button>
+              </div>
             </li>
           ))
         )}
