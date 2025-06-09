@@ -1,5 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
-import userReducer from '../redux/userSlice';
+import userReducer from './slices/userSlice';
+import surveyReducer from './slices/surveySlice';
+import instanceReducer from './slices/instanceSlice';
+import participationReducer from './slices/participationSlice';
 
 /**
  * The Redux store, which is the central state manager for the application.
@@ -11,5 +14,16 @@ import userReducer from '../redux/userSlice';
 export const store = configureStore({
   reducer: {
     user: userReducer,
+    surveys: surveyReducer,
+    instances: instanceReducer,
+    participations: participationReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }),
 });
+
+export default store;

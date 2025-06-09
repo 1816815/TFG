@@ -86,9 +86,13 @@ class Question(models.Model):
     survey = models.ForeignKey(Survey, on_delete=models.CASCADE, related_name='questions')
     content = models.TextField()
     type = models.CharField(max_length=20)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
 
     def __str__(self):
-        return f"Q: {self.content}, {self.type}"
+        return f"Q: Orden:{self.order}, {self.content}, {self.type}"
 
 
 class Option(models.Model):

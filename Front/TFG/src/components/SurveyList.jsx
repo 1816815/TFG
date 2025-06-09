@@ -1,66 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import useSurveys from "../hooks/useSurveys";
+import { useSelector } from "react-redux";
 
 const SurveyList = () => {
-  const [surveys, setSurveys] = useState([]);
-  const [instances, setInstances] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const { accessToken, user } = useAuth();
-  const API_URL = import.meta.env.VITE_API_URL;
+  const { loadSurveys } = useSurveys();
 
-    const fetchSurveyInstances = async () => {
-    try {
-      const response = await fetch(
-        `${API_URL}/surveys/${surveyId}/instances/`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setInstances(data);
-      }
-    } catch (error) {
-      console.error("Error al cargar instancias:", error);
-    }
-  };
-
-
+  const error = useSelector((state) => state.surveys.error);
+  const loading = useSelector((state) => state.surveys.loading);
+  const surveys = useSelector((state) => state.surveys.items);
 
   useEffect(() => {
-    fetchSurveys();
+    loadSurveys();
   }, []);
-  
-
-
-  const fetchSurveys = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_URL}/surveys/`, {
-        headers: {
-         'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setSurveys(data);
-      } else {
-        setError('Error al cargar las encuestas');
-      }
-    } catch (error) {
-      setError('Error de conexión');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -85,7 +37,6 @@ const SurveyList = () => {
   }
 
   return (
-    
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Mis Encuestas</h2>
@@ -115,12 +66,11 @@ const SurveyList = () => {
                 <div className="card-body d-flex flex-column">
                   <h5 className="card-title">{survey.title}</h5>
                   <p className="card-text text-muted flex-grow-1">
-                    {survey.description.length > 100 
-                      ? `${survey.description.substring(0, 100)}...` 
-                      : survey.description
-                    }
+                    {survey.description.length > 100
+                      ? `${survey.description.substring(0, 100)}...`
+                      : survey.description}
                   </p>
-                  
+
                   <div className="mt-auto">
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <small className="text-muted">
@@ -130,12 +80,11 @@ const SurveyList = () => {
                       <small className="text-muted">
                         <i className="fas fa-copy me-1"></i>
                         {survey.instances_count || 0} instancias
-                       
                       </small>
                     </div>
-                    
-                    <Link 
-                      to={`/encuesta/${survey.id}`} 
+
+                    <Link
+                      to={`/encuesta/${survey.id}`}
                       className="btn btn-outline-primary w-100"
                     >
                       <i className="fas fa-eye me-2"></i>

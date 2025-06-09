@@ -1,65 +1,24 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
+import useSurveys from "../hooks/useSurveys";
+import useInstance from "../hooks/useInstance";
+import { useSelector } from "react-redux";
 
 const SurveyDetail = () => {
-  const [survey, setSurvey] = useState(null);
-  const [instances, setInstances] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const survey = useSelector((state) => state.surveys.currentSurvey);
+  const instances = useSelector((state) => state.instances.instances);
+  const loading = useSelector((state) => state.surveys.loading);
+  const error = useSelector((state) => state.surveys.error);
   const [actionLoading, setActionLoading] = useState(false);
   const { surveyId } = useParams();
   const navigate = useNavigate();
-  const { accessToken } = useAuth();
-  const API_URL = import.meta.env.VITE_API_URL;
+  const { deleteSurveyById, loadSurveyById, loadSurveys } = useSurveys();
+  const { loadInstancesBySurvey} = useInstance();
 
   useEffect(() => {
-    fetchSurveyDetail();
-    fetchSurveyInstances();
+    loadSurveyById(surveyId);
+    loadInstancesBySurvey(surveyId);
   }, [surveyId]);
-
-  const fetchSurveyDetail = async () => {
-    try {
-      const response = await fetch(`${API_URL}/surveys/${surveyId}/`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSurvey(data);
-      } else {
-        setError("Error al cargar la encuesta");
-      }
-    } catch (error) {
-      setError("Error de conexión");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSurveyInstances = async () => {
-    try {
-      const response = await fetch(
-        `${API_URL}/surveys/${surveyId}/instances/`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setInstances(data);
-      }
-    } catch (error) {
-      console.error("Error al cargar instancias:", error);
-    }
-  };
 
   const handleDeleteSurvey = async () => {
     if (
@@ -71,21 +30,9 @@ const SurveyDetail = () => {
     }
 
     try {
-      setActionLoading("delete");
-      const response = await fetch(`${API_URL}/surveys/${surveyId}/`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        alert("Encuesta eliminada correctamente");
-        navigate("/mis-encuestas");
-      } else {
-        alert("Error al eliminar la encuesta");
-      }
+      deleteSurveyById(surveyId);
+      loadSurveys();
+      navigate("/mis-encuestas");
     } catch (error) {
       alert("Error de conexión");
     } finally {
@@ -309,7 +256,7 @@ const SurveyDetail = () => {
                     )}
                     <div className="mt-2">
                       <Link
-                        to={`/encuesta/${survey.id}/instancias/${instance.id}`}
+                        to={`/encuesta/${survey.id}/instancia/${instance.id}`}
                         className="btn btn-sm btn-outline-primary"
                       >
                         Ver Detalles

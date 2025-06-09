@@ -1,9 +1,10 @@
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import ReorderableQuestions from "./ReorderableQuestions";
+import useSurveys from "../hooks/useSurveys";
+import { useSelector } from "react-redux";
 import useAuth from "../hooks/useAuth";
-import OptionsFieldArray from "./OptionsFieldArray";
-import { v4 as uuid} from "uuid";
 
 /**
  * Component that represents the form for creating or editing a survey.
@@ -13,104 +14,157 @@ import { v4 as uuid} from "uuid";
  * for editing the corresponding survey.
  */
 const SurveyForm = () => {
-  const { control, handleSubmit, setValue, watch, reset } = useForm({
+  const {
+    control,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       title: "",
       description: "",
       questions: [],
+      order: 0,
     },
   });
+  const { user } = useAuth();
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control,
     name: "questions",
   });
-  const API_URL = import.meta.env.VITE_API_URL;
-  const { accessToken, user } = useAuth();
+
+  const {
+    createNewSurvey,
+    updateExistingSurvey,
+    loadSurveyById,
+  } = useSurveys();
+
   const navigate = useNavigate();
-  const { surveyId } = useParams(); // If exists surveyId, is editing
+  const { surveyId } = useParams();
+  const survey = useSelector((state) => state.surveys.currentSurvey);
+  const loading = useSelector((state) => state.surveys.loading);
+  const error = useSelector((state) => state.surveys.error);
+
+  useEffect(() => {
+    if (surveyId) {
+      loadSurveyById(surveyId);
+    } 
+  }, []);
+
+  useEffect(() => {
+    if (surveyId && survey) {
+      reset({
+        title: survey.title,
+        description: survey.description,
+        questions: survey.questions.map((q) => ({
+          content: q.content,
+          type: q.type,
+          options: q.options || [],
+          order: q.order,
+        })),
+      });
+    }
+  }, [survey]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
-  const [loadingSurvey, setLoadingSurvey] = useState(!!surveyId);
+
+  // Estado para manejar errores de validación personalizados
+  const [customErrors, setCustomErrors] = useState({});
 
   const questions = watch("questions");
 
-  // if surveyId, load survey
-  useEffect(() => {
-    if (surveyId) {
-      const fetchSurvey = async () => {
-        try {
-          const response = await fetch(`${API_URL}/surveys/${surveyId}`, {
-            credentials: "include",
-          });
-          if (response.ok) {
-            const data = await response.json();
-            reset({
-              title: data.title,
-              description: data.description,
-              questions: data.questions.map((q) => ({
-                content: q.content,
-                type: q.type,
-                options: q.options || [],
-              })),
-            });
-          } else {
-            setServerError("No se pudo cargar la encuesta");
-          }
-        } catch (error) {
-          setServerError("Error de red al cargar encuesta");
-        } finally {
-          setLoadingSurvey(false);
-        }
-      };
-      fetchSurvey();
+  // Función para validar una pregunta específica
+  const validateQuestion = (question, index) => {
+    const errors = {};
+
+    // Validar contenido
+    if (!question.content?.trim()) {
+      errors.content = "La pregunta debe tener contenido.";
     }
-  }, [surveyId, API_URL, reset]);
 
-  const onSubmit = async (data) => {
-    setIsSubmitting(true);
-    setServerError("");
-    try {
-      const url = surveyId
-        ? `${API_URL}/surveys/${surveyId}/`
-        : `${API_URL}/surveys/`;
-      const method = surveyId ? "PUT" : "POST";
-      console.log(url);
+    // Validar opciones si es pregunta de elección
+    if (["single", "multiple"].includes(question.type)) {
+      const options = question.options || [];
+      const validOptions = options.filter((opt) => opt?.content?.trim() !== "");
+      const emptyOptions = options.filter((opt) => opt?.content?.trim() === "");
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          client: user.id,
-          title: data.title,
-          description: data.description,
-          questions: data.questions.map((q) => ({
-            content: q.content,
-            type: q.type,
-            options: ["single", "multiple"].includes(q.type)
-              ? q.options.map((opt) => ({ content: opt.content }))
-              : [],
-          })),
-        }),
-      });
-      if (response.ok) {
-        alert(`Encuesta ${surveyId ? "actualizada" : "creada"} con éxito`);
-        navigate("/");
-      } else {
-        const errorData = await response.json();
-        setServerError(errorData.detail || "Error desconocido");
+      if (emptyOptions.length > 0) {
+        errors.options =
+          "Hay opción(es) vacía(s). Complete o elimine las opciones vacías.";
+      } else if (validOptions.length < 2) {
+        errors.options = "Debe tener al menos dos opciones válidas.";
       }
-    } catch (error) {
-      setServerError("Error de red");
-    } finally {
-      setIsSubmitting(false);
     }
+
+    return errors;
   };
 
-  if (loadingSurvey) return <p>Cargando encuesta...</p>;
+  // Validación en tiempo real
+  useEffect(() => {
+    const newErrors = questions.map((q, i) => validateQuestion(q, i));
+    setCustomErrors(newErrors);
+  }, [questions]);
+
+
+const onSubmit = async (data) => {
+  const finalErrors = data.questions.map((q, i) => validateQuestion(q, i));
+  const hasError = finalErrors.some((err) => Object.keys(err).length > 0);
+  const formattedQuestions = data.questions.map((q, index) => ({
+  content: q.content,
+  type: q.type,
+  options: ["single", "multiple"].includes(q.type)
+    ? q.options
+        .filter((opt) => opt?.content?.trim() !== "")
+        .map((opt) => ({ content: opt.content }))
+    : [],
+  order: index,
+}));
+
+  if (hasError) {
+    setCustomErrors(finalErrors);
+    setServerError("Algunas preguntas no tienen un formato válido.");
+    return;
+  }
+
+  setIsSubmitting(true);
+  setServerError("");
+
+const payload = {
+    ...data,
+    questions: formattedQuestions,
+
+  };
+
+
+  try {
+
+    let resultAction;
+    if (surveyId) {
+      resultAction = await updateExistingSurvey(surveyId, payload);
+    } else {
+      resultAction = await createNewSurvey(payload);
+    }
+
+    // Verificamos si fue exitoso usando `fulfilled` o `rejected` del action
+    if (resultAction.meta.requestStatus === "fulfilled") {
+      alert(`Encuesta ${surveyId ? "actualizada" : "creada"} con éxito`);
+      navigate(`/encuesta/${resultAction.payload.id}`);
+    } else {
+      const error = resultAction.payload || "Error desconocido";
+      setServerError(error);
+    }
+  } catch (error) {
+    setServerError("Error de red");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+
+  if (loading) return <p>Cargando encuesta...</p>;
 
   return (
     <div className="container mt-4">
@@ -158,54 +212,14 @@ const SurveyForm = () => {
         </div>
 
         <h4>Preguntas</h4>
-        {fields.map((question, index) => {
-          const contentId = `questions-${index}-content`;
-          const typeId = `questions-${index}-type`;
-
-          return (
-            <div key={question.id} className="card p-3 mb-3">
-              <div className="mb-2">
-                <label htmlFor={contentId}>Contenido</label>
-                <Controller
-                  name={`questions.${index}.content`}
-                  control={control}
-                  rules={{ required: "El contenido es obligatorio" }}
-                  render={({ field, fieldState }) => (
-                    <>
-                      <input
-                        {...field}
-                        id={contentId}
-                        className="form-control"
-                      />
-                      {fieldState.error && (
-                        <p style={{ color: "red" }}>
-                          {fieldState.error.message}
-                        </p>
-                      )}
-                    </>
-                  )}
-                />
-              </div>
-              <div className="mb-2">
-                <label htmlFor={typeId}>Tipo</label>
-                <Controller
-                  name={`questions.${index}.type`}
-                  control={control}
-                  render={({ field }) => (
-                    <select {...field} id={typeId} className="form-select">
-                      <option value="text">Respuesta abierta</option>
-                      <option value="single">Opción única</option>
-                      <option value="multiple">Opción múltiple</option>
-                    </select>
-                  )}
-                />
-              </div>
-              {["single", "multiple"].includes(questions[index]?.type) && (
-                <OptionsFieldArray control={control} nestIndex={index} />
-              )}
-            </div>
-          );
-        })}
+        <ReorderableQuestions
+          control={control}
+          fields={fields}
+          move={move}
+          remove={remove}
+          watch={watch}
+          errors={customErrors}
+        />
 
         <button
           type="button"

@@ -12,9 +12,9 @@ import SurveyList from "./SurveyList";
 import SurveyDetail from "./SurveyDetail";
 import SetInstance from "./SetInstance";
 import InstancesList from "./InstancesList";
-import InstanceSettings from "./InstanceSettings";
 import SurveyConfiguration from "./SurveyConfiguration";
-
+import InstanceDetail from "./InstanceDetail";
+import PublicSurveyList from "./PublicSurveyList";
 
 
 /**
@@ -58,9 +58,12 @@ const AppRoutes = () => {
          <Route path="/encuesta/:surveyId/instanciar" element={<SetInstance />} />
          <Route path="/encuesta/:surveyId/lista" element={<InstancesList />} />
          <Route path="/encuesta/:surveyId/configuracion/:instanceId" element={<SurveyConfiguration />} />
+         <Route path="/encuesta/:surveyId/instancia/:instanceId" element={<InstanceDetail />} />
 
-      
 
+    </Route>
+    <Route element={<RoleProtectedRoute allowedRoles={["admin", "client", "voter"]} />} >
+    <Route path="/encuestas" element={<PublicSurveyList />} />
     </Route>
       <Route element={<AuthProtectedRoute />}>
         <Route path="/profile" element={<Profile />} />

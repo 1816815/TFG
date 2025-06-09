@@ -23,8 +23,7 @@ import useUser from "../hooks/useUser";
  */
 
 const Auth = () => {
-  const { register: registerUser } = useAuth();
-  const {login} = useUser();
+  const {login ,register: registerUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
@@ -37,6 +36,7 @@ const Auth = () => {
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors }
   } = useForm();
 
@@ -46,24 +46,39 @@ const Auth = () => {
     reset();
   }, [location.pathname, reset]);
 
-  const onSubmit = async (data) => {
-    try {
-      if (isRegisterMode) {
-        await registerUser(data);
-        await login({ username: data.username, password: data.password });
-      } else if (isLoginMode) {
-        await login(data);
-      }
-      navigate("/");
-    } catch (error) {
-      if (error == "Error: No active account found with the given credentials") {
-        setMessage("Usuario o contraseña incorrectos.");
-      } else {
-        setMessage("Error en la operación. Por favor, intenta de nuevo.");
-      }
-      console.log(error);
+const onSubmit = async (data) => {
+  try {
+    if (isRegisterMode) {
+      await registerUser(data);
+      await login({ username: data.username, password: data.password });
+    } else if (isLoginMode) {
+      await login(data);
     }
-  };
+    navigate("/");
+  } catch (err) {
+    
+    if (err.detail) {
+      setError('username', {
+        type: 'server',
+        message: err.detail,
+      });
+      return;
+    }
+
+    // Si err es un objeto con errores por campo (registro)
+    Object.entries(err).forEach(([field, messages]) => {
+      setError(field, {
+        type: 'server',
+        message: Array.isArray(messages) ? messages.join(', ') : messages,
+      });
+    });
+
+    setError('root', {
+      type: 'server',
+      message: 'Ocurrieron errores al registrar el usuario.',
+    });
+  }
+};
 
   const toggleMode = () => {
     navigate(isRegisterMode ? "/login" : "/register");

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import useUser from "../hooks/useUser";
 
 const Profile = () => {
-  const { user, doUpdateUser } = useUser();
+  const { user, updateUserProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -25,7 +25,7 @@ const Profile = () => {
   }, [user, reset]);
 
   const onSubmit = async (data) => {
-    const result = await doUpdateUser(user.id, data);
+    const result = await updateUserProfile( data);
     if (result) {
       setIsEditing(false);
       setMessage("Perfil actualizado correctamente");

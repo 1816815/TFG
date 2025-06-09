@@ -1,5 +1,5 @@
 import { useFieldArray, Controller } from 'react-hook-form';
-import { v4 as uuid } from 'uuid';
+
 
 /**
  * Component that renders a list of text inputs to add options to a question.

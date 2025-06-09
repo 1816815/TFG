@@ -162,7 +162,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['content', 'type', 'options']
+        fields = ['id','content', 'type', 'options', 'order']
 
     def create(self, validated_data):
         """
@@ -220,11 +220,12 @@ class SurveySerializer(serializers.ModelSerializer):
     set to the Question being created.
     """
     questions = QuestionSerializer(many=True)
+    client = serializers.PrimaryKeyRelatedField(read_only=True)
     instances_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Survey
-        fields = ['id', 'title', 'description', 'questions', 'instances_count']
+        fields = ['id', 'title', 'description', 'questions', 'client' ,'instances_count']
         read_only_fields = ['id']
 
     def create(self, validated_data):
@@ -324,7 +325,7 @@ class OptionSerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ['id', 'content', 'type']
+        fields = ['id', 'content', 'type', 'order']
 
 class QuestionDetailSerializer(QuestionSerializer):
     options = OptionSerializer(many=True, read_only=True)

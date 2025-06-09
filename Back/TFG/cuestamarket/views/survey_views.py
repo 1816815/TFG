@@ -141,7 +141,7 @@ class SurveyInstanceViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         
         base_url = request.build_absolute_uri('/')[:-1]
-        public_url = f"{base_url}/survey/{instance.id}/"
+        public_url = f"{base_url}/cuestamarket/surveys/{instance.id}/"
         
         return Response({
             'public_url': public_url,
@@ -187,11 +187,22 @@ class SurveyInstanceViewSet(viewsets.ModelViewSet):
             'state': instance.state,
             'questions_statistics': questions_stats
         })
+    
     @action(detail=False, methods=['get'], permission_classes=[AllowAny], url_path='public/open')
     def public_open_instances(self, request):
         """Endpoint público: listar instancias de encuesta abiertas"""
-        open_instances = SurveyInstance.objects.filter(state='open')
+        now = timezone.now()
+        open_instances = SurveyInstance.objects.filter(
+            closure_date__isnull=False,
+            closure_date__gt=now
+        )
         serializer = self.get_serializer(open_instances, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='by-survey/(?P<survey_id>[^/.]+)')
+    def by_survey(self, request, survey_id=None):
+        instances = SurveyInstance.objects.filter(survey__client=request.user, survey_id=survey_id)
+        serializer = self.get_serializer(instances, many=True)
         return Response(serializer.data)
 
 class SurveyConfigurationViewSet(viewsets.ViewSet):
@@ -259,13 +270,13 @@ class SurveyConfigurationViewSet(viewsets.ViewSet):
                 
                 if answer:
                     if answer.option:
-                        row[f'pregunta_{question.id}'] = answer.option.content
+                        row[f'pregunta_{question.content}'] = answer.option.content
                     elif answer.content:
-                        row[f'pregunta_{question.id}'] = answer.content
+                        row[f'pregunta_{question.content}'] = answer.content
                     else:
-                        row[f'pregunta_{question.id}'] = 'Sin respuesta'
+                        row[f'pregunta_{question.content}'] = 'Sin respuesta'
                 else:
-                    row[f'pregunta_{question.id}'] = 'Sin respuesta'
+                    row[f'pregunta_{question.content}'] = 'Sin respuesta'
             
             export_data.append(row)
         
@@ -332,9 +343,9 @@ class SurveyPublicAPIView(APIView):
             for question in questions:
                 question_data = {
                     'id': question.id,
-                    'content': question.content,  # El campo se llama 'content', no 'text'
+                    'content': question.content,
                     'type': question.type,
-                    'order': question.id  # Usar el ID como orden por defecto
+                    'order': question.order
                 }
                 
                 # Agregar opciones si es pregunta de opción múltiple

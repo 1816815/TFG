@@ -21,7 +21,7 @@ const AppInitializer = ({ children }) => {
     if (!accessToken) return;
 
     try {
-      await loadUserProfile();
+       await loadUserProfile();
       localStorage.setItem("isLoggedIn", "true");
 
       const exp = decodeExpFromToken(accessToken);

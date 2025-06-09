@@ -4,22 +4,25 @@ import useUser from "../hooks/useUser";
 import { useSelector } from "react-redux";
 
 function AdminPanel() {
-  const { getAllUsers, adminUpdate, adminRegister, adminToggle, listRoles } =
-    useUser();
+  const API_URL = import.meta.env.VITE_API_URL;
+  const { getAllUsers } = useUser();
 
+  const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
+  const [error, setError] = useState(null);
   const [showInactive, setShowInactive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const users = useSelector((state) => state.user.users);
-  let error = "";
+
+  const userList = useSelector((state) => state.user.users);
+
 
   const {
     handleSubmit,
     control,
     reset,
-    setError,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -31,18 +34,49 @@ function AdminPanel() {
     },
   });
 
-  const fetchRoles = () => {
-    listRoles()
-      .then((response) => {
-        setRoles(response);
-      })
-      .catch((error) => {
-        console.error("Error fetching roles:", error);
-      });
+  useEffect( ()=>{
+   getAllUsers();
+  }, []);
+
+  useEffect(()=>{
+    console.log(userList);
+    
+  }, [userList]);
+
+
+
+  const headers = {
+    "Content-Type": "application/json",
   };
 
+  const fetchData = async (endpoint, setter) => {
+    try {
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        headers,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(JSON.stringify(await res.json()));
+      const data = await res.json();
+      setter(data);
+    } catch (err) {
+      setError(`Error cargando ${endpoint}: ${err.message}`);
+    }
+  };
+
+  const fetchUsers = async () => {
+    await fetchData("/admin/users/", (data) => {
+      const normalized = data.map((u) => ({
+        ...u,
+        is_active: u.is_active !== undefined ? u.is_active : true,
+      }));
+      setUsers(normalized);
+    });
+  };
+
+  const fetchRoles = () => fetchData("/roles", setRoles);
+
   useEffect(() => {
-    getAllUsers();
+    fetchUsers();
     fetchRoles();
   }, []);
 
@@ -77,15 +111,21 @@ function AdminPanel() {
     const action = user.is_active ? "deactivate" : "activate";
     if (
       !window.confirm(
-        `¿Estás seguro de ${
-          user.is_active ? "desactivar" : "activar"
-        } este usuario?`
+        `¿Estás seguro de ${user.is_active ? "desactivar" : "activar"} este usuario?`
       )
     )
       return;
     try {
-      await adminToggle(user.id, action);
-      getAllUsers();
+      const res = await fetch(
+        `${API_URL}/admin/users/${user.id}/${action}/`,
+        {
+          method: "POST",
+          headers,
+          credentials: "include",
+        }
+      );
+      if (!res.ok) throw new Error(JSON.stringify(await res.json()));
+      fetchUsers();
     } catch (err) {
       setError(`Error al ${action} usuario: ${err.message}`);
     }
@@ -96,42 +136,42 @@ function AdminPanel() {
     setError(null);
 
     const isEdit = editingUser && !editingUser.isNewUser;
-    const userData = {
+    const method = isEdit ? "PUT" : "POST";
+    const url = isEdit
+      ? `${API_URL}/admin/users/${editingUser.id}/`
+      : `${API_URL}/admin/users/`;
+
+    const payload = {
       username: formData.username,
       email: formData.email,
       role_id: parseInt(formData.role_id),
       is_active: formData.is_active,
-      ...(formData.password ? { password: formData.password } : {}),
+      ...(editingUser?.isNewUser && formData.password
+        ? { password: formData.password }
+        : {}),
     };
 
     try {
-      if (isEdit) {
-        await adminUpdate(editingUser.id, userData);
-      } else {
-        await adminRegister(userData);
-      }
-
+      const res = await fetch(url, {
+        method,
+        headers,
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(JSON.stringify(await res.json()));
       setEditingUser(null);
       reset();
-      getAllUsers();
+      fetchUsers();
     } catch (err) {
-      Object.entries(err).forEach(([field, messages]) => {
-        setError(field, {
-          type: "server",
-          message: messages.join(", "),
-        });
-      });
-
-      // También puedes poner un error general si quieres:
-      setError("root", {
-        type: "server",
-        message: "Ocurrieron errores al guardar el usuario.",
-      });
+      setError(`Error al guardar usuario: ${err.message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
-  const filteredUsers = showInactive ? users : users.filter((u) => u.is_active);
+
+  const filteredUsers = showInactive
+    ? users
+    : users.filter((u) => u.is_active);
 
   return (
     <div className="container mt-4">
@@ -140,10 +180,7 @@ function AdminPanel() {
       {error && (
         <div className="alert alert-danger">
           <p>{error}</p>
-          <button
-            className="btn btn-sm btn-danger"
-            onClick={() => setError(null)}
-          >
+          <button className="btn btn-sm btn-danger" onClick={() => setError(null)}>
             Cerrar
           </button>
         </div>
@@ -171,9 +208,7 @@ function AdminPanel() {
           <h4>{editingUser.isNewUser ? "Crear Usuario" : "Editar Usuario"}</h4>
 
           <div className="mb-3">
-            <label htmlFor="username" className="form-label">
-              Nombre de usuario
-            </label>
+            <label htmlFor="username" className="form-label">Nombre de usuario</label>
             <Controller
               name="username"
               control={control}
@@ -182,15 +217,11 @@ function AdminPanel() {
                 <input {...field} className="form-control" id="username" />
               )}
             />
-            {errors.username && (
-              <p className="text-danger">{errors.username.message}</p>
-            )}
+            {errors.username && <p className="text-danger">{errors.username.message}</p>}
           </div>
 
           <div className="mb-3">
-            <label htmlFor="email" className="form-label">
-              Correo electrónico
-            </label>
+            <label htmlFor="email" className="form-label">Correo electrónico</label>
             <Controller
               name="email"
               control={control}
@@ -205,15 +236,11 @@ function AdminPanel() {
                 <input {...field} className="form-control" id="email" />
               )}
             />
-            {errors.email && (
-              <p className="text-danger">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-danger">{errors.email.message}</p>}
           </div>
 
           <div className="mb-3">
-            <label htmlFor="role_id" className="form-label">
-              Rol
-            </label>
+            <label htmlFor="role_id" className="form-label">Rol</label>
             <Controller
               name="role_id"
               control={control}
@@ -229,16 +256,12 @@ function AdminPanel() {
                 </select>
               )}
             />
-            {errors.role_id && (
-              <p className="text-danger">{errors.role_id.message}</p>
-            )}
+            {errors.role_id && <p className="text-danger">{errors.role_id.message}</p>}
           </div>
 
           {editingUser.isNewUser && (
             <div className="mb-3">
-              <label htmlFor="password" className="form-label">
-                Contraseña
-              </label>
+              <label htmlFor="password" className="form-label">Contraseña</label>
               <Controller
                 name="password"
                 control={control}
@@ -286,11 +309,7 @@ function AdminPanel() {
           )}
 
           <div className="d-flex gap-2">
-            <button
-              type="submit"
-              className="btn btn-success"
-              disabled={isSubmitting}
-            >
+            <button type="submit" className="btn btn-success" disabled={isSubmitting}>
               {isSubmitting
                 ? editingUser.isNewUser
                   ? "Creando..."
@@ -299,11 +318,7 @@ function AdminPanel() {
                 ? "Crear"
                 : "Actualizar"}
             </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={handleCancel}
-            >
+            <button type="button" className="btn btn-secondary" onClick={handleCancel}>
               Cancelar
             </button>
           </div>
@@ -312,9 +327,7 @@ function AdminPanel() {
 
       <ul className="list-group">
         {filteredUsers.length === 0 ? (
-          <p className="mt-3">
-            No hay usuarios {showInactive ? "" : "activos"}.
-          </p>
+          <p className="mt-3">No hay usuarios {showInactive ? "" : "activos"}.</p>
         ) : (
           filteredUsers.map((u) => (
             <li
@@ -324,17 +337,11 @@ function AdminPanel() {
               }`}
             >
               <div>
-                <strong>{u.username}</strong> ({u.email}) -{" "}
-                {u.role?.name || "Sin rol"}
-                {!u.is_active && (
-                  <span className="text-muted"> (Inactivo)</span>
-                )}
+                <strong>{u.username}</strong> ({u.email}) - {u.role?.name || "Sin rol"}
+                {!u.is_active && <span className="text-muted"> (Inactivo)</span>}
               </div>
               <div className="btn-group">
-                <button
-                  className="btn btn-sm btn-outline-primary"
-                  onClick={() => handleEdit(u)}
-                >
+                <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(u)}>
                   Editar
                 </button>
                 <button

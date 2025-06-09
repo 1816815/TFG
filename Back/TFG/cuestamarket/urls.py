@@ -21,6 +21,9 @@ from .views import (
 router = DefaultRouter()
 router.register(r'admin/users', UserAdminViewSet, basename='admin-users')
 router.register(r'surveys', SurveyViewSet, basename='survey')
+router.register(r'survey-instances', SurveyInstanceViewSet, basename='survey-instance')
+#router.register(r'participation-results', ParticipationResultsAPIView, basename='participation-results')
+router.register(r'survey-configuration', SurveyConfigurationViewSet, basename='survey-configuration')
 
 urlpatterns = [
     path('', prueba_conexion, name='holamundo'),
@@ -39,17 +42,10 @@ urlpatterns = [
     path('users/my-profile', UserProfileView.as_view(), name='my-profile'),
     path('roles', RoleListView.as_view(), name='role-list'),
 
-    # Rutas anidadas para instancias
-    path('surveys/<int:survey_id>/instances/', SurveyInstanceViewSet.as_view({'get': 'list', 'post': 'create'}), name='survey-instance-list'),
-    path('surveys/<int:survey_id>/instances/<int:pk>/', SurveyInstanceViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='survey-instance-detail'),
-
-    # Configuración de encuesta
-    path('surveys/<int:survey_id>/configuration/', SurveyConfigurationViewSet.as_view({'get': 'retrieve', 'put': 'update'}), name='survey-config'),
 
     # Encuesta pública y envío
     path('surveys/<int:survey_id>/public/', SurveyPublicAPIView.as_view(), name='survey-public'),
     path('surveys/<int:survey_id>/submit/', SurveySubmissionAPIView.as_view(), name='survey-submit'),
 
-    # Resultados
-    path('participations/<int:participation_id>/results/', ParticipationResultsAPIView.as_view(), name='participation-results'),
+
 ]
