@@ -12,18 +12,16 @@ import {
 } from "lucide-react";
 import { v4 as uuid } from "uuid";
 import useInstance from "../hooks/useInstance";
- import { useSelector } from "react-redux";
-
+import { useSelector } from "react-redux";
+import DateStatusFilter from "./DateStatusFilter";
 
 const InstancesList = () => {
   const { surveyId } = useParams();
   const navigate = useNavigate();
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
   const { loadInstancesBySurvey } = useInstance();
 
   const instances = useSelector((state) => state.instances.instances);
+  const [filteredInstances, setFilteredInstances] = useState(instances);
   const loading = useSelector((state) => state.instances.loading);
   const error = useSelector((state) => state.instances.error);
 
@@ -35,7 +33,6 @@ const InstancesList = () => {
     }
   }, [surveyId]);
 
-  
   if (loading) {
     return <Loader2 className="animate-spin" />;
   }
@@ -43,17 +40,6 @@ const InstancesList = () => {
   if (error) {
     return <AlertCircle className="text-red-500" />;
   }
-  const filteredInstances = instances.filter((instance) => {
-    const creation = new Date(instance.creation_date);
-
-    const matchesStartDate = !startDate || creation >= new Date(startDate);
-    const matchesEndDate = !endDate || creation <= new Date(endDate);
-
-    const matchesStatus =
-      filterStatus === "all" || instance.state === filterStatus;
-
-    return matchesStartDate && matchesEndDate && matchesStatus;
-  });
 
   const formatDate = (dateString) => {
     if (!dateString) return "No especificada";
@@ -137,10 +123,7 @@ const InstancesList = () => {
       {/* Header */}
       <div className="row align-items-center mb-4">
         <div className="col-md-8">
-          <h2 className="h3 mb-1">
-            Instancias
-            
-          </h2>
+          <h2 className="h3 mb-1">Instancias</h2>
           <p className="text-muted mb-0">
             {filteredInstances.length} instancia
             {filteredInstances.length !== 1 ? "s" : ""} encontrada
@@ -159,67 +142,14 @@ const InstancesList = () => {
       </div>
 
       {/* Filtros */}
-  <div className="row mb-4 align-items-end">
-  {/* Fechas */}
-  <div className="col-md-4 mb-3 mb-md-0">
-    <label htmlFor="startDate" className="form-label">Desde</label>
-    <input
-      type="date"
-      className="form-control"
-      id="startDate"
-      name="startDate"
-      value={startDate}
-      onChange={(e) => setStartDate(e.target.value)}
-    />
-  </div>
-
-  <div className="col-md-4 mb-3 mb-md-0">
-    <label htmlFor="endDate" className="form-label">Hasta</label>
-    <input
-      type="date"
-      className="form-control"
-      id="endDate"
-      name="endDate"
-      value={endDate}
-      onChange={(e) => setEndDate(e.target.value)}
-    />
-  </div>
-
-  {/* Botón limpiar fechas */}
-
-
-  {/* Estado */}
-  <div className="col-md-2">
-    <label htmlFor="filterStatus" className="form-label">Estado</label>
-    <select
-      value={filterStatus}
-      onChange={(e) => setFilterStatus(e.target.value)}
-      className="form-select"
-      id="filterStatus"
-      name="filterStatus"
-    >
-      <option value="all">Todos</option>
-      <option value="open">Abierta</option>
-      <option value="closed">Cerrada</option>
-      <option value="draft">Borrador</option>
-    </select>
-  </div>
-</div>
-
-  <div className="col-md-2 mb-3 mb-md-0 d-flex align-items-end">
-    <button
-      type="button"
-      className="btn btn-outline-secondary w-100"
-      onClick={() => {
-        setStartDate("");
-        setEndDate("");
-        setFilterStatus("all");
-      }}
-    >
-      Limpiar
-    </button>
-  </div>
-
+      <div className="row mb-4 align-items-end">
+        <DateStatusFilter
+          data={instances}
+          dateField="creation_date"
+          statusField="state"
+          onFilter={setFilteredInstances}
+        />
+      </div>
 
       {/* Lista de instancias */}
       {filteredInstances.length === 0 ? (
@@ -232,7 +162,7 @@ const InstancesList = () => {
           </div>
           <h4 className="mb-2">No hay instancias</h4>
           <p className="text-muted">
-            {startDate || endDate || filterStatus !== "all"
+            {filteredInstances.length === 0
               ? "No se encontraron instancias con los filtros aplicados."
               : "Aún no se han creado instancias para esta encuesta."}
           </p>

@@ -12,20 +12,10 @@ from .auth_views import IsClient
 
 class SurveyViewSet(viewsets.ModelViewSet):
     """
-    Viewset for Survey model
+    Viewset for Survey model with simple duplication logic
 
-    This viewset is responsible for handling CRUD operations on Survey model
-    instances. It is only accessible by authenticated users and they can
-    only see their own created surveys.
-
-    Attributes:
-        queryset (QuerySet): The queryset for the viewset. It is a QuerySet
-            of all Survey instances.
-        serializer_class (Serializer): The serializer for the viewset. It is
-            SurveySerializer.
-        permission_classes (list): The list of permissions required to access
-            this viewset. It requires the user to be authenticated and to be
-            a client, an admin or staff.
+    When editing a survey that already has instances, it creates a new survey
+    instead of modifying the original to preserve data integrity.
     """
     queryset = Survey.objects.all()
     serializer_class = SurveySerializer
@@ -33,7 +23,108 @@ class SurveyViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Show only surveys created by the authenticated user
-        return self.queryset.filter(client=self.request.user)
+        user = self.request.user
+        if user.role.name == 'admin' or user.is_staff:
+            return self.queryset
+        return self.queryset.filter(client=user)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Update survey. If it has instances, create a new survey instead.
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # Check if survey has instances
+        has_instances = instance.instances.exists()
+        
+        if has_instances:
+            # Create new survey instead of updating
+            return self._create_new_survey(request, instance, partial)
+        else:
+            # Normal update if no instances exist
+            return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Partial update. If survey has instances, create new survey.
+        """
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
+
+    def _create_new_survey(self, request, original_survey, partial=False):
+        serializer = self.get_serializer(data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        validated_data = dict(serializer.validated_data)
+        questions_data = validated_data.pop('questions', None)  # Guardamos preguntas aparte
+
+        validated_data['client'] = request.user
+
+        with transaction.atomic():
+            # Crear la nueva encuesta
+            new_survey = Survey.objects.create(**validated_data)
+
+            if questions_data:
+                # Si el usuario envió nuevas preguntas, crearlas manualmente
+                for question in questions_data:
+                    options_data = question.pop('options', []) if 'options' in question else []
+                    new_question = Question.objects.create(survey=new_survey, **question)
+                    for option in options_data:
+                        Option.objects.create(question=new_question, **option)
+            else:
+                # Si no envió preguntas, copiar las del original
+                self._copy_questions_and_options(original_survey, new_survey)
+
+        response_serializer = self.get_serializer(new_survey)
+
+        return Response({
+            'message': 'Survey has instances. New survey created instead of updating.',
+            'original_survey_id': original_survey.id,
+            'new_survey': response_serializer.data,
+            'instances_count': original_survey.instances.count()
+        }, status=status.HTTP_201_CREATED)
+
+
+    def _copy_questions_and_options(self, source_survey, target_survey):
+        """
+        Copy questions and their options from source survey to target survey.
+        """
+        for question in source_survey.questions.all():
+            # Create new question
+            new_question = Question.objects.create(
+                survey=target_survey,
+                content=question.content,
+                type=question.type,
+                order=question.order,
+                is_required=getattr(question, 'is_required', False)
+            )
+            
+            # Copy options if they exist
+            for option in question.options.all():
+                Option.objects.create(
+                    question=new_question,
+                    content=option.content,
+                    order=getattr(option, 'order', option.id)
+                )
+
+    @action(detail=True, methods=['get'])
+    def can_edit_directly(self, request, pk=None):
+        """
+        Check if survey can be edited directly (no instances exist).
+        """
+        survey = self.get_object()
+        has_instances = survey.instances.exists()
+        
+        return Response({
+            'can_edit_directly': not has_instances,
+            'has_instances': has_instances,
+            'instances_count': survey.instances.count(),
+            'message': 'Survey can be edited directly' if not has_instances 
+                      else 'Survey has instances. Editing will create a new survey.'
+        })
+    
+
 
 class SurveyInstanceViewSet(viewsets.ModelViewSet):
     serializer_class = SurveyInstanceSerializer
@@ -41,7 +132,11 @@ class SurveyInstanceViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         # Solo las instancias de encuestas del cliente actual
-        return SurveyInstance.objects.filter(survey__client=self.request.user)
+        user = self.request.user
+        if user.role.name == 'admin' or user.is_staff:
+            return SurveyInstance.objects.all()
+        else:
+            return SurveyInstance.objects.filter(survey__client=self.request.user)
     
     def get_serializer_class(self):
         if self.action in ['retrieve', 'update', 'partial_update']:
@@ -201,7 +296,11 @@ class SurveyInstanceViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='by-survey/(?P<survey_id>[^/.]+)')
     def by_survey(self, request, survey_id=None):
-        instances = SurveyInstance.objects.filter(survey__client=request.user, survey_id=survey_id)
+        user = request.user
+        if user.role.name == 'admin' or user.is_staff:
+            instances = SurveyInstance.objects.filter(survey_id=survey_id)
+        else:
+            instances = SurveyInstance.objects.filter(survey__client=user, survey_id=survey_id)
         serializer = self.get_serializer(instances, many=True)
         return Response(serializer.data)
 
@@ -210,11 +309,15 @@ class SurveyConfigurationViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_survey_instance(self, instance_id):
-        return get_object_or_404(
-            SurveyInstance, 
-            id=instance_id, 
-            survey__client=self.request.user
-        )
+        user = self.request.user
+        if user.role.name == 'admin' or user.is_staff:
+            return get_object_or_404(SurveyInstance, id=instance_id)
+        else:
+            return get_object_or_404(
+                SurveyInstance, 
+                id=instance_id, 
+                survey__client=self.request.user
+                )
     
     @action(detail=False, methods=['get'], url_path='(?P<instance_id>[^/.]+)/questions')
     def list_questions(self, request, instance_id=None):
@@ -353,8 +456,8 @@ class SurveyPublicAPIView(APIView):
                     question_data['options'] = [
                         {
                             'id': option.id,
-                            'content': option.content,  # El campo se llama 'content', no 'text'
-                            'order': option.id  # Usar el ID como orden por defecto
+                            'content': option.content,
+                            'order': option.id
                         }
                         for option in question.options.all()
                     ]
@@ -387,7 +490,6 @@ class SurveyPublicAPIView(APIView):
                 'error': 'Internal server error',
                 'message': 'Ha ocurrido un error inesperado.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class SurveySubmissionAPIView(APIView):
     """API para enviar respuestas de encuesta"""
@@ -435,7 +537,6 @@ class SurveySubmissionAPIView(APIView):
             )
             
             # Procesar respuestas
-            
             for answer_data in answers:
                 question_id = answer_data.get('question_id')
                 question = instance.survey.questions.filter(id=question_id).first()
@@ -493,6 +594,7 @@ class SurveySubmissionAPIView(APIView):
                 'error': 'Internal server error',
                 'message': 'Error al procesar las respuestas.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_survey_data(request, instance_id):

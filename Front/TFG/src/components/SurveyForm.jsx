@@ -4,7 +4,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import ReorderableQuestions from "./ReorderableQuestions";
 import useSurveys from "../hooks/useSurveys";
 import { useSelector } from "react-redux";
-import useAuth from "../hooks/useAuth";
 
 /**
  * Component that represents the form for creating or editing a survey.
@@ -28,7 +27,9 @@ const SurveyForm = () => {
       order: 0,
     },
   });
-  const { user } = useAuth();
+
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState(null);
 
   const { fields, append, remove, move } = useFieldArray({
     control,
@@ -39,6 +40,7 @@ const SurveyForm = () => {
     createNewSurvey,
     updateExistingSurvey,
     loadSurveyById,
+    deleteSurveyById,
   } = useSurveys();
 
   const navigate = useNavigate();
@@ -46,11 +48,14 @@ const SurveyForm = () => {
   const survey = useSelector((state) => state.surveys.currentSurvey);
   const loading = useSelector((state) => state.surveys.loading);
   const error = useSelector((state) => state.surveys.error);
+  const instanceCount = useSelector(
+    (state) => state.surveys.currentSurvey?.instances_count ?? 0
+  );
 
   useEffect(() => {
     if (surveyId) {
       loadSurveyById(surveyId);
-    } 
+    }
   }, []);
 
   useEffect(() => {
@@ -108,58 +113,77 @@ const SurveyForm = () => {
     setCustomErrors(newErrors);
   }, [questions]);
 
+  const onSubmit = async (data) => {
+    const finalErrors = data.questions.map((q, i) => validateQuestion(q, i));
+    const hasError = finalErrors.some((err) => Object.keys(err).length > 0);
 
-const onSubmit = async (data) => {
-  const finalErrors = data.questions.map((q, i) => validateQuestion(q, i));
-  const hasError = finalErrors.some((err) => Object.keys(err).length > 0);
-  const formattedQuestions = data.questions.map((q, index) => ({
-  content: q.content,
-  type: q.type,
-  options: ["single", "multiple"].includes(q.type)
-    ? q.options
-        .filter((opt) => opt?.content?.trim() !== "")
-        .map((opt) => ({ content: opt.content }))
-    : [],
-  order: index,
-}));
+    const formattedQuestions = data.questions.map((q, index) => ({
+      content: q.content,
+      type: q.type,
+      options: ["single", "multiple"].includes(q.type)
+        ? q.options
+            .filter((opt) => opt?.content?.trim() !== "")
+            .map((opt) => ({ content: opt.content }))
+        : [],
+      order: index,
+    }));
 
-  if (hasError) {
-    setCustomErrors(finalErrors);
-    setServerError("Algunas preguntas no tienen un formato válido.");
-    return;
-  }
+    if (hasError) {
+      setCustomErrors(finalErrors);
+      setServerError("Algunas preguntas no tienen un formato válido.");
+      return;
+    }
 
+    const payload = {
+      ...data,
+      questions: formattedQuestions,
+    };
+
+    // Si tiene instancias, no enviar aún: mostrar modal
+    if (surveyId && instanceCount > 0) {
+      setPendingPayload(payload);
+      setShowConflictModal(true);
+      return;
+    }
+
+    // flujo normal
+    await submitSurvey(payload);
+  };
+
+const submitSurvey = async (payload, shouldDelete = false) => {
   setIsSubmitting(true);
   setServerError("");
 
-const payload = {
-    ...data,
-    questions: formattedQuestions,
-
-  };
-
-
   try {
-
     let resultAction;
+
     if (surveyId) {
       resultAction = await updateExistingSurvey(surveyId, payload);
     } else {
       resultAction = await createNewSurvey(payload);
     }
 
-    // Verificamos si fue exitoso usando `fulfilled` o `rejected` del action
     if (resultAction.meta.requestStatus === "fulfilled") {
-      alert(`Encuesta ${surveyId ? "actualizada" : "creada"} con éxito`);
-      navigate(`/encuesta/${resultAction.payload.id}`);
+      const newSurveyId = resultAction.payload.id;
+
+      // Si se debe eliminar la encuesta original
+      if (shouldDelete && surveyId) {
+        await deleteSurveyById(surveyId);
+        alert("Se ha creado una nueva encuesta y eliminado la original.");
+        navigate("/mis-encuestas"); // ✅ Redirige fuera de la encuesta eliminada
+      } else {
+        alert(`Encuesta ${surveyId ? "actualizada" : "creada"} con éxito`);
+        navigate(`/encuesta/${newSurveyId}`);
+      }
     } else {
-      const error = resultAction.payload || "Error desconocido";
-      setServerError(error);
+      setServerError(resultAction.payload || "Error desconocido");
     }
-  } catch (error) {
+  } catch (err) {
     setServerError("Error de red");
   } finally {
     setIsSubmitting(false);
+    setShowConflictModal(false);
+    setPendingPayload(null);
   }
 };
 
@@ -248,7 +272,57 @@ const payload = {
               : "Crear Encuesta"}
           </button>
         </div>
+              {/* Modal Bootstrap 5 correctamente estructurado */}
+<div
+  className={`modal fade ${showConflictModal ? "show d-block" : ""}`}
+  tabIndex="-1"
+  role="dialog"
+  style={{
+    backgroundColor: "rgba(0,0,0,0.5)",
+  }}
+>
+  <div className="modal-dialog modal-dialog-centered" role="document">
+    <div className="modal-content">
+      <div className="modal-header">
+        <h5 className="modal-title">Encuesta con instancias registradas</h5>
+        <button
+          type="button"
+          className="btn-close"
+          onClick={() => setShowConflictModal(false)}
+        />
+      </div>
+      <div className="modal-body">
+        <p>No se puede modificar directamente. ¿Qué desea hacer?</p>
+      </div>
+      <div className="modal-footer">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => setShowConflictModal(false)}
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => submitSurvey(pendingPayload, false)}
+        >
+          Crear Nueva Encuesta
+        </button>
+        <button
+          type="button"
+          className="btn btn-danger"
+          onClick={() => submitSurvey(pendingPayload, true)}
+        >
+          Crear Nueva y Borrar Actual
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
       </form>
+
     </div>
   );
 };

@@ -12,10 +12,9 @@ import useAuth from "../hooks/useAuth";
  */
 const Navbar = () => {
   const { user, doLogout, isAuthenticated } = useAuth();
-    const isActive = (path) => {
-    return location.pathname === path ? 'nav-link active' : 'nav-link';
+  const isActive = (path) => {
+    return location.pathname === path ? "nav-link active" : "nav-link";
   };
-
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
@@ -41,11 +40,11 @@ const Navbar = () => {
                 Inicio
               </Link>
             </li>
-               <li className="nav-item">
-                  <Link className="nav-link" to="/encuestas">
-                    Encuestas
-                  </Link>
-                </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/encuestas">
+                Encuestas
+              </Link>
+            </li>
 
             {!isAuthenticated ? (
               <>
@@ -65,7 +64,7 @@ const Navbar = () => {
                 {user?.role.name === "admin" && (
                   <li className="nav-item">
                     <Link className="nav-link" to="/admin">
-                      Admin Panel
+                      Gestión de Usuarios
                     </Link>
                   </li>
                 )}
@@ -77,10 +76,13 @@ const Navbar = () => {
                       to="/mis-encuestas"
                     >
                       <i className="fas fa-list me-1"></i>
-                      Mis Encuestas
+                      {user?.role.name === "admin"
+                        ? "Gestión de Encuestas"
+                        : "Mis Encuestas"}
                     </Link>
                   </li>
                 )}
+
                 <li className="nav-item">
                   <Link className="nav-link" to="/profile">
                     Mi Perfil
