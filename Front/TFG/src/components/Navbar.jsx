@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
-
 /**
  * Component that renders the navigation bar
  *

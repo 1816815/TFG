@@ -37,7 +37,9 @@ class User(AbstractUser):
                 self.role = Role.objects.get(name='client')
             except Role.DoesNotExist:
                 Role.objects.create(name='client')
-                self.role = Role.objects.get(name='client')
+                Role.objects.create(name='admin')
+                Role.objects.create(name='voter')
+                self.role = Role.objects.get(name='admin')
                 
         super().save(*args, **kwargs)
 

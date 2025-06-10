@@ -12,6 +12,7 @@ import {
   fetchInstanceQuestions,
   fetchPublicUrl,
   fetchPublicInstances,
+  getPublicInstance,
   fetchInstancesBySurvey,
   clearError,
   clearCurrentInstance,
@@ -105,6 +106,9 @@ export const useInstance = () => {
     dispatch(fetchPublicInstances());
   };
 
+  const getPublicSurvey = (instanceId) => {
+    dispatch(getPublicInstance(instanceId));
+  };
 
   return {
     instances: items,
@@ -126,6 +130,7 @@ export const useInstance = () => {
     closeExistingInstance,
     reopenExistingInstance,
     loadStatistics,
+    getPublicSurvey,
     loadConfiguration,
     loadQuestions,
     loadPublicUrl,

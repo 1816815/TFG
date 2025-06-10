@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import useSurveys from "../hooks/useSurveys";
 import { useSelector } from "react-redux";

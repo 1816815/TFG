@@ -1,7 +1,7 @@
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import ReorderableQuestions from "./ReorderableQuestions";
+import ReorderableQuestions from "../components/ReorderableQuestions";
 import useSurveys from "../hooks/useSurveys";
 import { useSelector } from "react-redux";
 
@@ -170,7 +170,7 @@ const submitSurvey = async (payload, shouldDelete = false) => {
       if (shouldDelete && surveyId) {
         await deleteSurveyById(surveyId);
         alert("Se ha creado una nueva encuesta y eliminado la original.");
-        navigate("/mis-encuestas"); // ✅ Redirige fuera de la encuesta eliminada
+        navigate("/mis-encuestas");
       } else {
         alert(`Encuesta ${surveyId ? "actualizada" : "creada"} con éxito`);
         navigate(`/encuesta/${newSurveyId}`);

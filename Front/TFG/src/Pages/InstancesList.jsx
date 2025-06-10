@@ -13,7 +13,7 @@ import {
 import { v4 as uuid } from "uuid";
 import useInstance from "../hooks/useInstance";
 import { useSelector } from "react-redux";
-import DateStatusFilter from "./DateStatusFilter";
+import DateStatusFilter from "../components/DateStatusFilter";
 
 const InstancesList = () => {
   const { surveyId } = useParams();

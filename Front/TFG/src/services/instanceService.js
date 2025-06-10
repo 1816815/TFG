@@ -84,4 +84,7 @@ export const instanceService = {
       credentials: "include",
     });
   },
+  async getPublicInstance(instanceId) {
+    return await apiClient.get(`/surveys/${instanceId}/public/`);
+  },
 };

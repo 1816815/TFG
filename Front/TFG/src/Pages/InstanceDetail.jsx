@@ -77,9 +77,6 @@ const handleSubmit = async (e) => {
 };
 
 
-
-
-
   if (!instance) return <p>Cargando...</p>;
 
 

@@ -28,6 +28,10 @@ const PublicSurveyList = () => {
           <li key={survey.id}>
             <strong>{survey.survey.title}</strong> - Creada el:{" "}
             {new Date(survey.creation_date).toLocaleDateString()}
+            <br />
+            - Cierre: {survey.closure_date ? new Date(survey.closure_date).toLocaleDateString() : "Sin fecha de cierre"}
+            <br />
+            <a href={`/encuestas/${survey.id}/responder`}>Responder encuesta</a>
           </li>
         ))}
       </ul>

@@ -1,6 +1,6 @@
-import React, { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import ExportButton from "./ExportButton";
+import ExportButton from "../components/ExportButton";
 import useInstance from "../hooks/useInstance";
 import useParticipation from "../hooks/useParticipations";
 import { useParams } from "react-router-dom";

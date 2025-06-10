@@ -15,14 +15,16 @@ from .views import (
     SurveyConfigurationViewSet,
     SurveySubmissionAPIView,
     SurveyPublicAPIView,
-    ParticipationResultsAPIView
+    ParticipationResultsAPIView,
+    submit_survey,
+    survey_stats
+    
 )
 
 router = DefaultRouter()
 router.register(r'admin/users', UserAdminViewSet, basename='admin-users')
 router.register(r'surveys', SurveyViewSet, basename='survey')
 router.register(r'survey-instances', SurveyInstanceViewSet, basename='survey-instance')
-#router.register(r'participation-results', ParticipationResultsAPIView, basename='participation-results')
 router.register(r'survey-configuration', SurveyConfigurationViewSet, basename='survey-configuration')
 
 urlpatterns = [
@@ -44,8 +46,10 @@ urlpatterns = [
 
 
     # Encuesta pública y envío
-    path('surveys/<int:survey_id>/public/', SurveyPublicAPIView.as_view(), name='survey-public'),
-    path('surveys/<int:survey_id>/submit/', SurveySubmissionAPIView.as_view(), name='survey-submit'),
+    path('surveys/<int:instance_id>/public/', SurveyPublicAPIView.as_view(), name='survey-public'),
+    path('surveys/<int:instance_id>/submit/', submit_survey, name='survey-submit'),
+    path('participations/<int:participation_id>/results/', ParticipationResultsAPIView.as_view(), name='participation-results'),
+    path('surveys/<int:survey_id>/instances/<int:instance_id>/stats/', survey_stats, name='survey-stats'),
 
 
 ]

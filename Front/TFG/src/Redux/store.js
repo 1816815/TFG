@@ -3,6 +3,7 @@ import userReducer from './slices/userSlice';
 import surveyReducer from './slices/surveySlice';
 import instanceReducer from './slices/instanceSlice';
 import participationReducer from './slices/participationSlice';
+import surveySubmitReducer from './slices/submitSlice';
 
 /**
  * The Redux store, which is the central state manager for the application.
@@ -17,6 +18,7 @@ export const store = configureStore({
     surveys: surveyReducer,
     instances: instanceReducer,
     participations: participationReducer,
+    surveySubmit : surveySubmitReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

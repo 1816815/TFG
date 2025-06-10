@@ -1,7 +1,6 @@
 import { useEffect } from "react";
-import useAuth from "../hooks/useAuth";
+import useAuth  from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-
 
 /**
  * Logs out the user if they are logged in, otherwise redirects to the login page.
@@ -14,17 +13,16 @@ import { useNavigate } from "react-router-dom";
  */
 const Logout = () => {
   const { doLogout } = useAuth();
+  const navigate = useNavigate();
   const isLoggedIn = Boolean(localStorage.getItem("isLoggedIn"));
-  if (isLoggedIn) {
-    useEffect(() => {
+
+  useEffect(() => {
+    if (isLoggedIn) {
       doLogout();
-    }, [doLogout]);
-  } else {
-    const navigate = useNavigate();
-    useEffect(() => {
+    } else {
       navigate("/");
-    }, [navigate]);
-  }
+    }
+  }, [isLoggedIn, doLogout, navigate]);
 
   return null;
 };

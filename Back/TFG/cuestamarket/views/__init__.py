@@ -31,10 +31,19 @@ from .misc_views import (
 
 from .survey_views import (
     SurveyViewSet,
-    SurveyInstanceViewSet,
     SurveyConfigurationViewSet,
     SurveyPublicAPIView,
+
+)
+
+from .instance_views import (
+    SurveyInstanceViewSet,
     SurveySubmissionAPIView,
+    submit_survey,
+    survey_stats
+)
+
+from .participation_views import (
     ParticipationResultsAPIView
 )
 
@@ -55,6 +64,7 @@ __all__ = [
     "prueba_conexion",
 
     # Survey
-    "SurveyViewSet", "IsClient", "SurveyInstanceViewSet", "SurveyConfigurationViewSet"
+    "SurveyViewSet", "IsClient", "SurveyInstanceViewSet", "SurveyConfigurationViewSet", "submit_survey", "SurveyPublicAPIView", "SurveySubmissionAPIView", "ParticipationResultsAPIView",
+    "survey_stats"
 ]
 

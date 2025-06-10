@@ -158,6 +158,17 @@ export const fetchPublicInstances = createAsyncThunk(
   }
 )
 
+export const getPublicInstance = createAsyncThunk(
+  'instances/getPublicInstance',
+  async (instanceId, { rejectWithValue }) => {
+    try {
+     return await instanceService.getPublicInstance(instanceId);
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 
 const initialState = {
   items: [],
@@ -368,12 +379,27 @@ const instanceSlice = createSlice({
       .addCase(fetchPublicInstances.fulfilled, (state, action) => {
         state.loading = false;
         state.publicInstances = action.payload;
+       
       })
       .addCase(fetchPublicInstances.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchPublicInstances.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Get Public Instance
+      .addCase(getPublicInstance.fulfilled, (state, action) => {
+        state.currentInstance = action.payload;
+        state.loading = false;
+      })
+      .addCase(getPublicInstance.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getPublicInstance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

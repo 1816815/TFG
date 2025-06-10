@@ -1,20 +1,21 @@
 import { Routes, Route } from "react-router-dom";
-import ChartDemo from "./Chart";
-import Crono from "./Crono";
-import Auth from "./Auth";
-import AdminPanel from "./AdminPanel";
-import Profile from "./Profile";
+import ChartDemo from "../components/Chart";
+import Crono from "../components/Crono";
+import Auth from "../Pages/Auth";
+import AdminPanel from "../Pages/AdminPanel";
+import Profile from "../Pages/Profile";
 import RoleProtectedRoute from "./RoleProtectedRoute";
 import AuthProtectedRoute from "./AuthProtectedRoute";
-import Logout from "./Logout";
-import SurveyForm from "./SurveyForm";
-import SurveyList from "./SurveyList";
-import SurveyDetail from "./SurveyDetail";
-import SetInstance from "./SetInstance";
-import InstancesList from "./InstancesList";
-import SurveyConfiguration from "./SurveyConfiguration";
-import InstanceDetail from "./InstanceDetail";
-import PublicSurveyList from "./PublicSurveyList";
+import Logout from "../components/Logout";
+import SurveyForm from "../Pages/SurveyForm";
+import SurveyList from "../Pages/SurveyList";
+import SurveyDetail from "../Pages/SurveyDetail";
+import SetInstance from "../Pages/SetInstance";
+import InstancesList from "../Pages/InstancesList";
+import SurveyConfiguration from "../Pages/SurveyConfiguration";
+import InstanceDetail from "../Pages/InstanceDetail";
+import PublicSurveyList from "../Pages/PublicSurveyList";
+import AnswerForm from "../Pages/AnswerForm";
 
 
 /**
@@ -64,6 +65,7 @@ const AppRoutes = () => {
     </Route>
     <Route element={<RoleProtectedRoute allowedRoles={["admin", "client", "voter"]} />} >
     <Route path="/encuestas" element={<PublicSurveyList />} />
+    <Route path="/encuestas/:instanceId/responder" element={<AnswerForm />} />
     </Route>
       <Route element={<AuthProtectedRoute />}>
         <Route path="/profile" element={<Profile />} />

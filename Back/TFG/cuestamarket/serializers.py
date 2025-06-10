@@ -1,6 +1,6 @@
 from django.utils import timezone
 from rest_framework import serializers
-from .models import User, Role, Survey, Question, Option, Answer, Participation, SurveyInstance, Report
+from .models import User, Role, Survey, Question, Option, Answer, Participation, SurveyInstance, Report, AnswerOption
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -332,6 +332,15 @@ class QuestionDetailSerializer(QuestionSerializer):
     
     class Meta(QuestionSerializer.Meta):
         fields = QuestionSerializer.Meta.fields + ['options']
+
+class AnswerOptionSerializer(serializers.ModelSerializer):
+    """Serializer para las opciones seleccionadas en una respuesta"""
+    option = OptionSerializer(read_only=True)
+    option_id = serializers.IntegerField(write_only=True)
+    
+    class Meta:
+        model = AnswerOption
+        fields = ['id', 'option', 'option_id', 'created_at']
 
 class SurveyInstanceDetailSerializer(SurveyInstanceSerializer):
     survey_questions = QuestionDetailSerializer(source='survey.questions', many=True, read_only=True)

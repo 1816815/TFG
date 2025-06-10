@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import useAuth from "../hooks/useAuth";
-import useUser from "../hooks/useUser";
+
 
 /**
  * Auth component handles user authentication by providing login and registration functionality.

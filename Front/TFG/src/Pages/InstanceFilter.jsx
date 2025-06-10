@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Search } from "react-feather";
 
 const InstanceFilter = ({ data = [], onFilter, searchableFields = [], statusField = "state" }) => {
