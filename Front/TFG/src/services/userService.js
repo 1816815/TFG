@@ -101,7 +101,29 @@ async getRoles() {
   return await apiClient.get('/roles');
 },
 
-  async initializeAuth() {
+async activateUser(uid, token){
+  return await apiClient.get(`/activate/${uid}/${token}/`);
+
+},
+async requestPasswordReset(email) {
+  return await apiClient.post('/password-reset/', { email });
+},
+
+async resetPasswordConfirm(uid, token, password) {
+  return await apiClient.post('/password-reset/confirm/', {
+    uid,
+    token,
+    password,
+  });
+},
+async changePassword(current_password, new_password) {
+  return await apiClient.post('/change-password/', {
+    current_password,
+    new_password,
+  });
+},
+
+async initializeAuth() {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
     
     if (!isLoggedIn) {

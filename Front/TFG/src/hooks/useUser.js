@@ -120,6 +120,8 @@ const useUser = () => {
     }
   };
 
+
+
   // Logout user
   const logout = async () => {
     try {

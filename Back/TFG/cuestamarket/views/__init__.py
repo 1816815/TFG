@@ -9,7 +9,11 @@ from .auth_views import (
     CookieTokenRefreshView,
     LogoutView,
     IsAdmin,
-    IsClient
+    IsClient,
+    ActivateUserView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
+    ChangePasswordView
 )
 
 from .admin_views import (
@@ -49,7 +53,8 @@ from .participation_views import (
 
 __all__ = [
     # Auth
-    "RegisterView", "CustomTokenObtainPairView", "CookieTokenRefreshView", "LogoutView",
+    "RegisterView", "CustomTokenObtainPairView", "CookieTokenRefreshView", "LogoutView", "ActivateUserView",
+    "PasswordResetRequestView", "PasswordResetConfirmView", "ChangePasswordView",
 
     # Admin
     "UserAdminViewSet", "RoleListView", "IsAdmin",

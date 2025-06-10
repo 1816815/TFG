@@ -10,6 +10,9 @@ services:
       - MARIADB_PASSWORD=${SQL_PASSWORD}
       - MARIADB_HOST=db
       - MARIADB_PORT=3306
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
 
     volumes:
       - ./Back/TFG:/usr/src/app/

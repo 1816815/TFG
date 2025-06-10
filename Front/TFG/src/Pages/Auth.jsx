@@ -50,7 +50,7 @@ const onSubmit = async (data) => {
   try {
     if (isRegisterMode) {
       await registerUser(data);
-      await login({ username: data.username, password: data.password });
+      
     } else if (isLoginMode) {
       await login(data);
     }

@@ -16,6 +16,10 @@ import SurveyConfiguration from "../Pages/SurveyConfiguration";
 import InstanceDetail from "../Pages/InstanceDetail";
 import PublicSurveyList from "../Pages/PublicSurveyList";
 import AnswerForm from "../Pages/AnswerForm";
+import Activate from "../components/Activate";
+import ForgotPassword from "../Pages/ForgotPassword";
+import ResetPassword from "../Pages/ResetPassword";
+import ChangePassword from "../Pages/ChangePassword";
 
 
 /**
@@ -46,6 +50,11 @@ const AppRoutes = () => {
       <Route path="/login" element={<Auth />} />
       <Route path="/register" element={<Auth />} />
        <Route path="/logout" element={<Logout />} />
+       <Route path="/activar/:uid/:token" element={<Activate />} />
+       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+
+
 
       <Route element={<RoleProtectedRoute allowedRoles={["admin"]} />}>
         <Route path="/admin" element={<AdminPanel />} />
@@ -60,15 +69,17 @@ const AppRoutes = () => {
          <Route path="/encuesta/:surveyId/lista" element={<InstancesList />} />
          <Route path="/encuesta/:surveyId/configuracion/:instanceId" element={<SurveyConfiguration />} />
          <Route path="/encuesta/:surveyId/instancia/:instanceId" element={<InstanceDetail />} />
-
-
     </Route>
+
     <Route element={<RoleProtectedRoute allowedRoles={["admin", "client", "voter"]} />} >
     <Route path="/encuestas" element={<PublicSurveyList />} />
     <Route path="/encuestas/:instanceId/responder" element={<AnswerForm />} />
     </Route>
+
       <Route element={<AuthProtectedRoute />}>
         <Route path="/profile" element={<Profile />} />
+        <Route path="/change-password" element={<ChangePassword />} />
+
       </Route>
     </Routes>
   );

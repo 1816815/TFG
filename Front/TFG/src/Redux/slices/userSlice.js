@@ -57,6 +57,17 @@ export const updateUser = createAsyncThunk(
   }
 );
 
+export const activateUser = createAsyncThunk(
+  "user/activateUser",
+  async ({ uid, token }, { rejectWithValue }) => {
+    try {
+      return await userService.activateUser(uid, token);
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+)
+
 export const loginUser = createAsyncThunk(
   "user/loginUser",
   async (credentials, { dispatch, rejectWithValue }) => {
@@ -161,6 +172,40 @@ export const adminGetRoles = createAsyncThunk(
     }
   }
 )
+
+export const requireChangePassword = createAsyncThunk(
+  'user/changePassword',
+  async (email, { rejectWithValue }) => {
+    try {
+      return await userService.requestPasswordReset(email);
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+)
+
+export const confirmChangePassword = createAsyncThunk(
+  'user/confirmChangePassword',
+  async ({ uid, token, password }, { rejectWithValue }) => {
+    try {
+      console.log("uid:", uid, "token:", token, "password:", password);
+      return await userService.resetPasswordConfirm(uid, token, password);
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const changePassword = createAsyncThunk(
+  'user/changePassword',
+  async ({ current_password, new_password }, { rejectWithValue }) => {
+    try {
+      return await userService.changePassword(current_password, new_password);
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
 
 // Initial state
 const initialState = {

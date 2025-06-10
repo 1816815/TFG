@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -7,49 +7,47 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework.permissions import BasePermission
 from rest_framework import status
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.core.mail import EmailMultiAlternatives
+from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
 from mi_tfg import settings
+import os
+from ..models import User
 from datetime import datetime, timedelta, timezone
-
+from ..utils import send_activation_email
 from ..serializers import RegisterSerializer
 
 class RegisterView(APIView):
-    """
-    View for registering new users.
-
-    This view handles the registration of new users by accepting a
-    POST request with user data, validating it, and creating a new
-    User instance if the data is valid.
-
-    Attributes:
-        permission_classes (list): List of permission classes for the view,
-            allowing unrestricted access.
-
-    Methods:
-        post(request): Handles POST requests to register a new user.
-    """
     permission_classes = [AllowAny]
 
     def post(self, request):
-        """
-        Handle POST requests to register a new user.
-
-        This method validates the incoming user data using the
-        RegisterSerializer and creates a new User instance if the
-        data is valid.
-
-        Args:
-            request (Request): The HTTP request object containing user data.
-
-        Returns:
-            Response: A Response object with a success message and status code
-            if the user is registered successfully, or an error message and
-            status code if the data is invalid.
-        """
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            return Response({"message": "Usuario registrado correctamente"}, status=status.HTTP_201_CREATED)
+            send_activation_email(user, request)
+            return Response({"message": "Usuario registrado. Revisa tu email para activar tu cuenta."},
+                            status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ActivateUserView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, uidb64, token):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = get_object_or_404(User, pk=uid)
+        except (TypeError, ValueError, OverflowError):
+            return Response({"error": "Enlace inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if default_token_generator.check_token(user, token):
+            user.is_active = True
+            user.save()
+            return Response({"message": "Cuenta activada correctamente."})
+        else:
+            return Response({"error": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
@@ -109,6 +107,81 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             )
 
         return response
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        if not email:
+            return Response({"error": "Email requerido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"message": "Si el email está registrado, recibirás un enlace."}, status=status.HTTP_200_OK)
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        reset_url = f"{os.getenv('FRONTEND_URL')}/reset-password/{uid}/{token}"
+
+        html_message = render_to_string("emails/password_reset_mail.html", {
+            "user": user,
+            "reset_url": reset_url,
+        })
+
+        plain_message = f"Hola {user.username},\n\nPara cambiar tu contraseña, visita este enlace:\n{reset_url}"
+
+        email_obj = EmailMultiAlternatives(
+            subject="Restablecer contraseña",
+            body=plain_message,
+            to=[user.email],
+        )
+        email_obj.attach_alternative(html_message, "text/html")
+        email_obj.send()
+
+        return Response({"message": "Si el email está registrado, recibirás un enlace."}, status=status.HTTP_200_OK)
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid = request.data.get("uid")
+        token = request.data.get("token")
+        new_password = request.data.get("password")
+
+        if not all([uid, token, new_password]):
+            return Response({"error": "Datos incompletos."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            uid_decoded = urlsafe_base64_decode(uid).decode()
+            user = User.objects.get(pk=uid_decoded)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "Enlace inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"error": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"message": "Contraseña restablecida correctamente."}, status=status.HTTP_200_OK)
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+
+        if not user.check_password(current_password):
+            return Response({"error": "Contraseña actual incorrecta."}, status=400)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Contraseña actualizada correctamente."})
 
 
 class CookieTokenRefreshView(TokenRefreshView):

@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { loginUser , logoutUser, registerUser } from '../Redux/slices/userSlice';
+import { loginUser , logoutUser, registerUser, activateUser, requireChangePassword, confirmChangePassword, changePassword } from '../Redux/slices/userSlice';
 
 /**
  * useAuth hook provides authentication functionality for the app.
@@ -61,6 +61,16 @@ const useAuth = () => {
     }
   };
 
+  const activateProfile = async (uid, token) => {
+      try {
+        const result = await dispatch(activateUser({ uid, token })).unwrap();
+        return result;
+      } catch (error) {
+        console.error("Error activating user:", error);
+        throw error;
+      }
+    };
+
 
   /**
    * Asynchronously logs out the user. Dispatches the logoutUser action, 
@@ -95,6 +105,33 @@ const useAuth = () => {
     }
   };
 
+  const requestNewPassword = async (email) => {
+    try {
+       return dispatch(requireChangePassword(email));
+    } catch (error) {
+      throw error;
+    }
+   
+  }
+
+  const confirmNewPassword = async (uid, token, password) => {
+    try {
+      
+       return dispatch(confirmChangePassword({ uid, token, password }));
+
+    } catch (error) {
+      throw error;
+    }
+   
+  }
+  const editPassword = async (current_password, new_password) => {
+    try {
+       return dispatch(changePassword({current_password, new_password}));
+    } catch (error) {
+      throw error;
+    }
+   
+  }
 
   return {
     user,
@@ -104,6 +141,10 @@ const useAuth = () => {
     login,
     register,
     doLogout,
+    activateProfile,
+    editPassword,
+    requestNewPassword,
+    confirmNewPassword
     
   };
 };

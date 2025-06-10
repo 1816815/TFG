@@ -6,6 +6,10 @@ from .views import (
     RegisterView,
     CustomTokenObtainPairView,
     CookieTokenRefreshView,
+    ActivateUserView,
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
+    ChangePasswordView,
     LogoutView,
     UserAdminViewSet,
     RoleListView,
@@ -39,6 +43,11 @@ urlpatterns = [
     path('token/refresh', CookieTokenRefreshView.as_view(), name='token_refresh'),
     path('register', RegisterView.as_view(), name='register'),
     path('logout', LogoutView.as_view(), name='logout'),
+    path('activate/<uidb64>/<token>/', ActivateUserView.as_view(), name='activate-user'),
+    path("password-reset/", PasswordResetRequestView.as_view(), name="password_reset"),
+    path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
+    path("change-password/", ChangePasswordView.as_view(), name="change-password"),
+
 
     # Usuarios y roles
     path('users/my-profile', UserProfileView.as_view(), name='my-profile'),
@@ -50,6 +59,7 @@ urlpatterns = [
     path('surveys/<int:instance_id>/submit/', submit_survey, name='survey-submit'),
     path('participations/<int:participation_id>/results/', ParticipationResultsAPIView.as_view(), name='participation-results'),
     path('surveys/<int:survey_id>/instances/<int:instance_id>/stats/', survey_stats, name='survey-stats'),
+    
 
 
 ]
