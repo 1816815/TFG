@@ -3,7 +3,7 @@ import { useState } from "react";
 import useAuth from "../hooks/useAuth";
 
 const ChangePassword = () => {
-  const { editPassword: changePassword } = useAuth();
+  const { validatePassword ,editPassword: changePassword } = useAuth();
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
@@ -15,20 +15,28 @@ const ChangePassword = () => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = async (data) => {
-    setMessage(null);
-    setError(null);
-    try {
-      await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
-      });
-      setMessage("Contraseña actualizada correctamente.");
-      reset();
-    } catch (err) {
-      setError(err.error || "Error al cambiar la contraseña.");
-    }
-  };
+const onSubmit = async (data) => {
+  setMessage(null);
+  setError(null);
+
+  try {
+
+    await validatePassword(data.newPassword);
+
+    await changePassword({
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword,
+    });
+
+    setMessage("Contraseña actualizada correctamente.");
+    reset();
+  } catch (err) {
+    
+    const errMsg = Array.isArray(err) ? err.join(" ") : err.error || "Error al cambiar la contraseña.";
+    setError(errMsg);
+  }
+};
+
 
   return (
     <div className="change-password-form">

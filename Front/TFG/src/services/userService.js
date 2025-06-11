@@ -116,10 +116,17 @@ async resetPasswordConfirm(uid, token, password) {
     password,
   });
 },
-async changePassword(current_password, new_password) {
+async changePassword(currentPassword, newPassword) {
+  
   return await apiClient.post('/change-password/', {
-    current_password,
-    new_password,
+    currentPassword,
+    newPassword,
+  });
+},
+
+async validatePassword(password) {
+  return await apiClient.post('/password-validate/', {
+    password,
   });
 },
 

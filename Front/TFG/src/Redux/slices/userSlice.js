@@ -198,11 +198,22 @@ export const confirmChangePassword = createAsyncThunk(
 
 export const changePassword = createAsyncThunk(
   'user/changePassword',
-  async ({ current_password, new_password }, { rejectWithValue }) => {
-    try {
-      return await userService.changePassword(current_password, new_password);
+  async ({ currentPassword, newPassword }, { rejectWithValue }) => {
+    try {      
+      return await userService.changePassword(currentPassword, newPassword);
     } catch (error) {
       return rejectWithValue(error);
+    }
+  }
+);
+
+export const passwordValidation = createAsyncThunk(
+  'user/passwordValidation',
+  async (password, { rejectWithValue }) => {
+    try {      
+      return await userService.validatePassword(password);
+    } catch (error) {
+      return rejectWithValue(error.errors || ['Error al validar la contraseña.']);
     }
   }
 );

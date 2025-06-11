@@ -8,6 +8,8 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework.permissions import BasePermission
 from rest_framework import status
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
@@ -163,25 +165,48 @@ class PasswordResetConfirmView(APIView):
         if not default_token_generator.check_token(user, token):
             return Response({"error": "Token inválido o expirado."}, status=status.HTTP_400_BAD_REQUEST)
 
+        try:
+            validate_password(new_password, user=user)
+        except ValidationError as e:
+            return Response({"error": " ".join(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
         user.set_password(new_password)
         user.save()
 
         return Response({"message": "Contraseña restablecida correctamente."}, status=status.HTTP_200_OK)
+
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         user = request.user
-        current_password = request.data.get("current_password")
-        new_password = request.data.get("new_password")
+        current_password = request.data.get("currentPassword")
+        new_password = request.data.get("newPassword")
 
         if not user.check_password(current_password):
             return Response({"error": "Contraseña actual incorrecta."}, status=400)
 
+        try:
+            validate_password(new_password, user=user)
+        except ValidationError as e:
+            return Response({"error": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+
         user.set_password(new_password)
         user.save()
         return Response({"message": "Contraseña actualizada correctamente."})
+
+    
+class PasswordValidationView(APIView):
+    def post(self, request):
+        password = request.data.get('password')
+        user = request.user if request.user.is_authenticated else None
+        try:
+            validate_password(password, user=user)
+        except ValidationError as e:
+            return Response({'valid': False, 'errors': e.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'valid': True}, status=status.HTTP_200_OK)
 
 
 class CookieTokenRefreshView(TokenRefreshView):

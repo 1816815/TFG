@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import useUser from "../hooks/useUser";
+import ChangePassword from "./ChangePassword"
 
 const Profile = () => {
   const { user, updateUserProfile } = useUser();
@@ -73,6 +74,7 @@ const Profile = () => {
         </form>
       )}
       {message && <p>{message}</p>}
+      <ChangePassword />
     </div>
   );
 };

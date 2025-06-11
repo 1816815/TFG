@@ -9,6 +9,7 @@ from .views import (
     ActivateUserView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
+    PasswordValidationView,
     ChangePasswordView,
     LogoutView,
     UserAdminViewSet,
@@ -47,6 +48,7 @@ urlpatterns = [
     path("password-reset/", PasswordResetRequestView.as_view(), name="password_reset"),
     path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
     path("change-password/", ChangePasswordView.as_view(), name="change-password"),
+    path("password-validate/", PasswordValidationView.as_view(), name="password-validate"),
 
 
     # Usuarios y roles

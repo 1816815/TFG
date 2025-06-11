@@ -1,6 +1,15 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { loginUser , logoutUser, registerUser, activateUser, requireChangePassword, confirmChangePassword, changePassword } from '../Redux/slices/userSlice';
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  loginUser,
+  logoutUser,
+  registerUser,
+  activateUser,
+  requireChangePassword,
+  confirmChangePassword,
+  changePassword,
+  passwordValidation
+} from "../Redux/slices/userSlice";
 
 /**
  * useAuth hook provides authentication functionality for the app.
@@ -26,8 +35,8 @@ const useAuth = () => {
   const isAuthenticated = Boolean(localStorage.getItem("isLoggedIn"));
 
   /**
-   * Asynchronously logs in a user. Dispatches the loginUser action, 
-   * stores the "isLoggedIn" flag in localStorage, and returns the action payload if successful, 
+   * Asynchronously logs in a user. Dispatches the loginUser action,
+   * stores the "isLoggedIn" flag in localStorage, and returns the action payload if successful,
    * or throws an error if not.
    * @param {Object} credentials - The user credentials, must have a "username" and a "password" property.
    * @returns {Promise<string>} - Resolves with the action payload (the access token) if successful, or throws an error if not.
@@ -44,7 +53,7 @@ const useAuth = () => {
   };
 
   /**
-   * Asynchronously registers a user. Dispatches the registerUser action, 
+   * Asynchronously registers a user. Dispatches the registerUser action,
    * and returns the action payload if successful, or throws an error if not.
    * @param {Object} userData - The user data, must have a "username", "email", and a "password" property.
    * @returns {Promise<any>} - Resolves with the action payload if successful, or throws an error if not.
@@ -62,18 +71,17 @@ const useAuth = () => {
   };
 
   const activateProfile = async (uid, token) => {
-      try {
-        const result = await dispatch(activateUser({ uid, token })).unwrap();
-        return result;
-      } catch (error) {
-        console.error("Error activating user:", error);
-        throw error;
-      }
-    };
-
+    try {
+      const result = await dispatch(activateUser({ uid, token })).unwrap();
+      return result;
+    } catch (error) {
+      console.error("Error activating user:", error);
+      throw error;
+    }
+  };
 
   /**
-   * Asynchronously logs out the user. Dispatches the logoutUser action, 
+   * Asynchronously logs out the user. Dispatches the logoutUser action,
    * navigates to the home page, and removes the isLoggedIn flag from localStorage.
    * @returns {Promise<any>} - Resolves with the action payload if successful, or throws an error if not.
    * @throws Will throw an error if the logout fails.
@@ -81,7 +89,7 @@ const useAuth = () => {
   const doLogout = async () => {
     try {
       const resultAction = await dispatch(logoutUser());
-      
+
       if (logoutUser.fulfilled.match(resultAction)) {
         // Logout successful
         navigate("/");
@@ -91,10 +99,11 @@ const useAuth = () => {
         // Logout fails on server, but proceed with client logout
         navigate("/");
         localStorage.removeItem("isLoggedIn");
-        
-        const errorMessage = resultAction.payload?.detail || 
-                            resultAction.error?.message || 
-                            'Error during logout';
+
+        const errorMessage =
+          resultAction.payload?.detail ||
+          resultAction.error?.message ||
+          "Error during logout";
         throw new Error(errorMessage);
       }
     } catch (error) {
@@ -107,31 +116,36 @@ const useAuth = () => {
 
   const requestNewPassword = async (email) => {
     try {
-       return dispatch(requireChangePassword(email));
+      return dispatch(requireChangePassword(email));
     } catch (error) {
       throw error;
     }
-   
-  }
+  };
 
   const confirmNewPassword = async (uid, token, password) => {
     try {
-      
-       return dispatch(confirmChangePassword({ uid, token, password }));
-
+      return dispatch(confirmChangePassword({ uid, token, password }));
     } catch (error) {
       throw error;
     }
-   
-  }
-  const editPassword = async (current_password, new_password) => {
+  };
+  const editPassword = async ({ currentPassword, newPassword }) => {
     try {
-       return dispatch(changePassword({current_password, new_password}));
+      return dispatch(
+        changePassword({ currentPassword, newPassword })
+      ).unwrap();
     } catch (error) {
       throw error;
     }
-   
-  }
+  };
+
+  const validatePassword = async (password) => {
+    try {
+      return dispatch(passwordValidation(password)).unwrap();
+    } catch (error) {
+      throw error;
+    }
+  };
 
   return {
     user,
@@ -144,8 +158,8 @@ const useAuth = () => {
     activateProfile,
     editPassword,
     requestNewPassword,
-    confirmNewPassword
-    
+    confirmNewPassword,
+    validatePassword
   };
 };
 export default useAuth;

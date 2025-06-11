@@ -13,7 +13,8 @@ from .auth_views import (
     ActivateUserView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
-    ChangePasswordView
+    ChangePasswordView,
+    PasswordValidationView
 )
 
 from .admin_views import (
@@ -54,7 +55,7 @@ from .participation_views import (
 __all__ = [
     # Auth
     "RegisterView", "CustomTokenObtainPairView", "CookieTokenRefreshView", "LogoutView", "ActivateUserView",
-    "PasswordResetRequestView", "PasswordResetConfirmView", "ChangePasswordView",
+    "PasswordResetRequestView", "PasswordResetConfirmView", "ChangePasswordView", "PasswordValidationView",
 
     # Admin
     "UserAdminViewSet", "RoleListView", "IsAdmin",

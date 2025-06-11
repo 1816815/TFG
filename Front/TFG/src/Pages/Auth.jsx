@@ -23,7 +23,7 @@ import useAuth from "../hooks/useAuth";
  */
 
 const Auth = () => {
-  const {login ,register: registerUser } = useAuth();
+  const { validatePassword,login ,register: registerUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
@@ -49,14 +49,23 @@ const Auth = () => {
 const onSubmit = async (data) => {
   try {
     if (isRegisterMode) {
+      try {
+        await validatePassword(data.password);
+      } catch (error) {
+        setError('password', {
+          type: 'validation',
+          message: error.message || 'La contraseña no cumple con los requisitos.',
+        });
+        return; // Detiene el flujo si la validación de contraseña falla
+      }
+
       await registerUser(data);
-      
     } else if (isLoginMode) {
       await login(data);
     }
+
     navigate("/");
   } catch (err) {
-    
     if (err.detail) {
       setError('username', {
         type: 'server',
@@ -65,20 +74,22 @@ const onSubmit = async (data) => {
       return;
     }
 
-    // Si err es un objeto con errores por campo (registro)
-    Object.entries(err).forEach(([field, messages]) => {
-      setError(field, {
-        type: 'server',
-        message: Array.isArray(messages) ? messages.join(', ') : messages,
+    if (typeof err === 'object') {
+      Object.entries(err).forEach(([field, messages]) => {
+        setError(field, {
+          type: 'server',
+          message: Array.isArray(messages) ? messages.join(', ') : messages,
+        });
       });
-    });
+    }
 
     setError('root', {
       type: 'server',
-      message: 'Ocurrieron errores al registrar el usuario.',
+      message: 'Ocurrieron errores al procesar la solicitud.',
     });
   }
 };
+
 
   const toggleMode = () => {
     navigate(isRegisterMode ? "/login" : "/register");
