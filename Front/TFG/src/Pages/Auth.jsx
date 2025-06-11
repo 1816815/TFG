@@ -1,3 +1,8 @@
+import useAuth from "../hooks/useAuth";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useLocation, useNavigate } from "react-router-dom";
+
 const Auth = () => {
   const { validatePassword, login, register: registerUser } = useAuth();
   const location = useLocation();
