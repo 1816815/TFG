@@ -1,3 +1,4 @@
+// vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -8,8 +9,6 @@ export default defineConfig({
     port: 5173,
     hmr: {
       protocol: 'wss',
-      host: 'cuestamarket.duckdns.org',
-      port: 443,
     },
     watch: {
       usePolling: true,
