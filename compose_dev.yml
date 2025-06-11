@@ -1,26 +1,5 @@
 services:
 
-  db:
-    image: mariadb:11
-    container_name: ${APP_NAME}_db
-    restart: always
-    environment:
-      - MARIADB_ROOT_PASSWORD=${SQL_ROOT_PASSWORD}
-      - SQL_DATABASE=${SQL_DATABASE}
-      - SQL_USER=${SQL_USER}
-      - SQL_PASSWORD=${SQL_PASSWORD}
-    ports:
-      - "${SQL_PORT}:3306"
-    volumes:
-      - mariadb_data:/var/lib/mysql
-    networks:
-      - tfg
-    healthcheck:
-      test: ["CMD-SHELL", "mariadb -hlocalhost -u$SQL_USER -p$SQL_PASSWORD -e 'SELECT 1;' $SQL_DATABASE"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
-
   backend:
     build: ./Back/
     container_name: ${APP_NAME}_backend
@@ -31,19 +10,16 @@ services:
       - MARIADB_PASSWORD=${SQL_PASSWORD}
       - MARIADB_HOST=db
       - MARIADB_PORT=3306
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      - FRONTEND_URL=${FRONTEND_URL}
-      - MYPROJECT_STAGE=${MYPROJECT_STAGE}
+
     volumes:
       - ./Back/TFG:/usr/src/app/
+
     ports:
       - ${HTTP_PORT}:8000
+
     networks:
       - tfg
-    depends_on:
-      db:
-        condition: service_healthy
+
     restart: always
 
   frontend:
@@ -71,5 +47,4 @@ networks:
     name: ${APP_NAME}_network
 
 volumes:
-  node_modules:
-  mariadb_data:
+ node_modules:

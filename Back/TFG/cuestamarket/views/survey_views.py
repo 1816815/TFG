@@ -25,7 +25,7 @@ class SurveyViewSet(viewsets.ModelViewSet):
         # Show only surveys created by the authenticated user
         user = self.request.user
         if user.role.name == 'admin' or user.is_staff:
-            return self.queryset
+            return self.queryset.all()
         return self.queryset.filter(client=user)
 
     def update(self, request, *args, **kwargs):
