@@ -1,10 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['cuestamarket.duckdns.org']
-  }
-})
+    host: '0.0.0.0',
+    port: 5173,
+    hmr: {
+      protocol: 'wss',
+      host: 'cuestamarket.duckdns.org',
+      port: 443,
+    },
+    watch: {
+      usePolling: true,
+    },
+  },
+});
