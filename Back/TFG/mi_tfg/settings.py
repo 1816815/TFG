@@ -71,6 +71,8 @@ CORS_ALLOW_HEADERS = [
     "origin",
 ]
 
+CSRF_TRUSTED_ORIGINS = ['https://api.cuestamarket.duckdns.org', 'https://cuestamarket.duckdns.org']
+
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'mi_tfg.urls'
@@ -159,7 +161,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
