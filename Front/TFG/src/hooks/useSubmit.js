@@ -163,6 +163,22 @@ export const useSurveySubmit = () => {
     }
   }, [handleSetCurrentStep]);
 
+const savePartialAnswer = async (formattedAnswers, instanceId) => {
+  
+  try {
+     submitSurvey(instanceId, {
+      answers: formattedAnswers,
+      complete: false,
+    });
+  } catch (error) {
+    console.error("Error al guardar respuestas parciales:", error);
+  }
+};
+
+
+
+
+
 
   return {
     // State
@@ -188,6 +204,7 @@ export const useSurveySubmit = () => {
     updateAnswer: handleUpdateAnswer,
     setCurrentStep: handleSetCurrentStep,
     setFormProgress: handleSetFormProgress,
+    savePartialAnswer,
 
     
     // Reset actions

@@ -2,9 +2,11 @@ import useAuth from "../hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 
 const Auth = () => {
   const { validatePassword, login, register: registerUser } = useAuth();
+  const { navigateWithFlash } = useFlashRedirect();
   const location = useLocation();
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
@@ -37,15 +39,17 @@ const Auth = () => {
             type: 'validation',
             message: error.message || 'La contraseña no cumple con los requisitos.',
           });
-          return; // Detiene el flujo si la validación de contraseña falla
+          return;
         }
 
         await registerUser(data);
+        navigateWithFlash("/", "Se ha enviado un correo electrónico a su dirección para confirmar el registro.", "info");
       } else if (isLoginMode) {
         await login(data);
+        navigateWithFlash("/", "Se ha iniciado sesión con éxito.", "success");
       }
 
-      navigate("/");
+
     } catch (err) {
       if (err.detail) {
         setError('username', {

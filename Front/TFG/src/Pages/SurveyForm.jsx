@@ -1,6 +1,7 @@
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 import ReorderableQuestions from "../components/ReorderableQuestions";
 import useSurveys from "../hooks/useSurveys";
 import { useSelector } from "react-redux";
@@ -28,6 +29,7 @@ const SurveyForm = () => {
     },
   });
 
+  const { navigateWithFlash } = useFlashRedirect();
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [pendingPayload, setPendingPayload] = useState(null);
 
@@ -150,43 +152,40 @@ const SurveyForm = () => {
     await submitSurvey(payload);
   };
 
-const submitSurvey = async (payload, shouldDelete = false) => {
-  setIsSubmitting(true);
-  setServerError("");
+  const submitSurvey = async (payload, shouldDelete = false) => {
+    setIsSubmitting(true);
+    setServerError("");
 
-  try {
-    let resultAction;
+    try {
+      let resultAction;
 
-    if (surveyId) {
-      resultAction = await updateExistingSurvey(surveyId, payload);
-    } else {
-      resultAction = await createNewSurvey(payload);
-    }
-
-    if (resultAction.meta.requestStatus === "fulfilled") {
-      const newSurveyId = resultAction.payload.id;
-
-      // Si se debe eliminar la encuesta original
-      if (shouldDelete && surveyId) {
-        await deleteSurveyById(surveyId);
-        alert("Se ha creado una nueva encuesta y eliminado la original.");
-        navigate("/mis-encuestas");
+      if (surveyId) {
+        resultAction = await updateExistingSurvey(surveyId, payload);
       } else {
-        alert(`Encuesta ${surveyId ? "actualizada" : "creada"} con éxito`);
-        navigate(`/encuesta/${newSurveyId}`);
+        resultAction = await createNewSurvey(payload);
       }
-    } else {
-      setServerError(resultAction.payload || "Error desconocido");
-    }
-  } catch (err) {
-    setServerError("Error de red");
-  } finally {
-    setIsSubmitting(false);
-    setShowConflictModal(false);
-    setPendingPayload(null);
-  }
-};
 
+      if (resultAction.meta.requestStatus === "fulfilled") {
+        const newSurveyId = resultAction.payload.id;
+
+        // Si se debe eliminar la encuesta original
+        if (shouldDelete && surveyId) {
+          await deleteSurveyById(surveyId);
+          navigateWithFlash("/mis-encuestas", "Se ha creado una nueva encuesta y eliminado la original.", "info");
+        } else {
+          navigateWithFlash(`/encuesta/${newSurveyId}`, `Encuesta ${surveyId ? "actualizada" : "creada"} con éxito`, "success");
+        }
+      } else {
+        setServerError(resultAction.payload || "Error desconocido");
+      }
+    } catch (err) {
+      setServerError("Error de red");
+    } finally {
+      setIsSubmitting(false);
+      setShowConflictModal(false);
+      setPendingPayload(null);
+    }
+  };
 
   if (loading) return <p>Cargando encuesta...</p>;
 
@@ -272,57 +271,57 @@ const submitSurvey = async (payload, shouldDelete = false) => {
               : "Crear Encuesta"}
           </button>
         </div>
-              {/* Modal Bootstrap 5 correctamente estructurado */}
-<div
-  className={`modal fade ${showConflictModal ? "show d-block" : ""}`}
-  tabIndex="-1"
-  role="dialog"
-  style={{
-    backgroundColor: "rgba(0,0,0,0.5)",
-  }}
->
-  <div className="modal-dialog modal-dialog-centered" role="document">
-    <div className="modal-content">
-      <div className="modal-header">
-        <h5 className="modal-title">Encuesta con instancias registradas</h5>
-        <button
-          type="button"
-          className="btn-close"
-          onClick={() => setShowConflictModal(false)}
-        />
-      </div>
-      <div className="modal-body">
-        <p>No se puede modificar directamente. ¿Qué desea hacer?</p>
-      </div>
-      <div className="modal-footer">
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => setShowConflictModal(false)}
+        {/* Modal Bootstrap 5 correctamente estructurado */}
+        <div
+          className={`modal fade ${showConflictModal ? "show d-block" : ""}`}
+          tabIndex="-1"
+          role="dialog"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.5)",
+          }}
         >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => submitSurvey(pendingPayload, false)}
-        >
-          Crear Nueva Encuesta
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger"
-          onClick={() => submitSurvey(pendingPayload, true)}
-        >
-          Crear Nueva y Borrar Actual
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Encuesta con instancias registradas
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowConflictModal(false)}
+                />
+              </div>
+              <div className="modal-body">
+                <p>No se puede modificar directamente. ¿Qué desea hacer?</p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowConflictModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => submitSurvey(pendingPayload, false)}
+                >
+                  Crear Nueva Encuesta
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => submitSurvey(pendingPayload, true)}
+                >
+                  Crear Nueva y Borrar Actual
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </form>
-
     </div>
   );
 };

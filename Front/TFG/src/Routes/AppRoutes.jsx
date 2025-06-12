@@ -20,6 +20,8 @@ import Activate from "../components/Activate";
 import ForgotPassword from "../Pages/ForgotPassword";
 import ResetPassword from "../Pages/ResetPassword";
 import ChangePassword from "../Pages/ChangePassword";
+import Layout from "./Layout";
+
 
 
 /**
@@ -45,6 +47,7 @@ import ChangePassword from "../Pages/ChangePassword";
 const AppRoutes = () => {
   return (
     <Routes>
+      <Route element={<Layout />}>
       <Route path="/" element={<ChartDemo />} />
       <Route path="/crono" element={<Crono />} />
       <Route path="/login" element={<Auth />} />
@@ -81,6 +84,8 @@ const AppRoutes = () => {
         <Route path="/change-password" element={<ChangePassword />} />
 
       </Route>
+
+    </Route>
     </Routes>
   );
 };

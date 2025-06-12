@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import useAuth  from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 
 /**
  * Logs out the user if they are logged in, otherwise redirects to the login page.
@@ -13,6 +14,7 @@ import { useNavigate } from "react-router-dom";
  */
 const Logout = () => {
   const { doLogout } = useAuth();
+  const { navigateWithFlash } = useFlashRedirect();
   const navigate = useNavigate();
   const isLoggedIn = Boolean(localStorage.getItem("isLoggedIn"));
 
@@ -20,7 +22,7 @@ const Logout = () => {
     if (isLoggedIn) {
       doLogout();
     } else {
-      navigate("/");
+     navigateWithFlash("/", "Su sesión no estaba iniciada", "info")
     }
   }, [isLoggedIn, doLogout, navigate]);
 

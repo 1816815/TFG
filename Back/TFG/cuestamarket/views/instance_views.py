@@ -284,147 +284,104 @@ def get_survey_data(request, instance_id):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def submit_survey(request, instance_id):
-    """API endpoint mejorado para enviar respuestas con manejo completo de AnswerOption"""
+    """API endpoint para enviar respuestas completas o parciales de una encuesta."""
     try:
         instance = get_object_or_404(SurveyInstance, id=instance_id)
-        
+
         if instance.state != 'open':
             return Response({
                 'error': 'Survey not available',
                 'message': 'Esta encuesta no está disponible para responder.'
             }, status=status.HTTP_403_FORBIDDEN)
-        
+
         answers_data = request.data.get('answers', [])
-        if not answers_data:
+        complete = request.data.get('completed', False)  # Default es False (avance parcial)
+
+        if not isinstance(answers_data, list) or not answers_data:
             return Response({
                 'error': 'No answers provided',
                 'message': 'No se proporcionaron respuestas.'
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         with transaction.atomic():
-            # Crear o verificar participación
+            # Participación autenticada o anónima
             if request.user.is_authenticated:
-                # Verificar si ya completó la encuesta
-                existing_completed = Participation.objects.filter(
-                    user=request.user,
-                    instance=instance,
-                    state='completed'
-                ).exists()
-                
-                if existing_completed:
-                    return Response({
-                        'error': 'Already completed',
-                        'message': 'Ya has completado esta encuesta.'
-                    }, status=status.HTTP_400_BAD_REQUEST)
-                
-                # Obtener o crear participación
                 participation, created = Participation.objects.get_or_create(
                     user=request.user,
                     instance=instance,
                     defaults={'state': 'in_progress'}
                 )
-                
-                # Limpiar respuestas anteriores si es una reedición
-                if not created:
-                    Answer.objects.filter(participation=participation).delete()
+
+                if participation.state == 'completed':
+                    return Response({
+                        'error': 'Already completed',
+                        'message': 'Ya has completado esta encuesta.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
             else:
-                # Participación anónima
                 participation = Participation.objects.create(
                     user=None,
                     instance=instance,
                     state='in_progress'
                 )
-            
+
             # Procesar respuestas
             for answer_data in answers_data:
                 question_id = answer_data.get('question_id')
-                
                 if not question_id:
-                    print(f"⚠️ Pregunta no encontrada antes: id={question_id} para encuesta {instance.id}")
                     continue
-                
+
                 try:
                     question = Question.objects.get(id=question_id, survey=instance.survey)
-                    print(f"✅ Procesando pregunta {question.id} de tipo '{question.type}'")
                 except Question.DoesNotExist:
-                    print(f"⚠️ Pregunta no encontrada: id={question_id} para encuesta {instance.id}")
                     continue
-                
-                # Crear respuesta base
+
+                # Eliminar respuestas anteriores de esa pregunta para esta participación
+                Answer.objects.filter(participation=participation, question=question).delete()
+
                 answer = Answer.objects.create(
                     participation=participation,
                     question=question
                 )
-                print(f"✅ Answer creado con ID: {answer.id}")
-                
-                # Manejar diferentes tipos de respuesta
-                if question.type == 'single':
-                    option_id = answer_data.get('option_id')
-                    if option_id is None:
-                        option_id = answer_data.get('selectedOption')
 
+                if question.type == 'single':
+                    option_id = answer_data.get('option_id') or answer_data.get('selectedOption')
                     if option_id:
                         try:
                             option = Option.objects.get(id=option_id, question=question)
                             answer.option = option
                             answer.save()
-                            print(f"✅ Opción única guardada: {option.id}")
                         except Option.DoesNotExist:
-                            print(f"⚠️ Opción única no encontrada: id={option_id} para pregunta {question.id}")
-                
+                            continue
+
                 elif question.type == 'multiple':
-                    option_ids = answer_data.get('option_ids')
-                    if option_ids is None:
-                        option_ids = answer_data.get('selectedOptions') or []
-                    
-                    print(f"🔍 Procesando opciones múltiples: {option_ids}")
-                    
-                    # Verificar que option_ids es una lista
-                    if not isinstance(option_ids, list):
-                        print(f"⚠️ option_ids no es una lista: {type(option_ids)} - {option_ids}")
-                        continue
-                    
-                    # Obtener todas las opciones válidas para esta pregunta
-                    valid_options = Option.objects.filter(question=question)
-                    valid_option_ids = list(valid_options.values_list('id', flat=True))
-                    print(f"🔍 Opciones válidas para pregunta {question.id}: {valid_option_ids}")
-                    
-                    created_count = 0
-                    for option_id in option_ids:
-                        try:
-                            # Asegurarse de que la opción pertenece a esta pregunta
-                            option = Option.objects.get(id=option_id, question=question)
-                            answer_option = AnswerOption.objects.create(answer=answer, option=option)
-                            created_count += 1
-                            print(f"✅ AnswerOption creado: answer={answer.id}, option={option.id}, answer_option_id={answer_option.id}")
-                        except Option.DoesNotExist:
-                            print(f"⚠️ Opción múltiple no encontrada: id={option_id} para pregunta {question.id}")
-                            print(f"Opciones válidas: {valid_option_ids}")
-                        except Exception as e:
-                            print(f"❌ Error creando AnswerOption: {str(e)}")
-                    
-                    print(f"✅ Total AnswerOption creados para pregunta {question.id}: {created_count}")
-                
+                    option_ids = answer_data.get('option_ids') or answer_data.get('selectedOptions') or []
+                    if isinstance(option_ids, list):
+                        for option_id in option_ids:
+                            try:
+                                option = Option.objects.get(id=option_id, question=question)
+                                AnswerOption.objects.create(answer=answer, option=option)
+                            except Option.DoesNotExist:
+                                continue
+
                 elif question.type in ['open', 'text', 'textarea']:
                     content = answer_data.get('content', '').strip()
                     if content:
                         answer.content = content
                         answer.save()
-                        print(f"✅ Contenido de texto guardado para pregunta {question.id}")
-            
-            # Marcar participación como completada
-            participation.state = 'completed'
-            participation.save()
-            print(f"✅ Participación {participation.id} marcada como completada")
-        
+
+            # Finalizar encuesta si se marcó como completa
+            if complete:
+                participation.state = 'completed'
+                participation.save()
+
         return Response({
             'success': True,
             'message': 'Respuestas guardadas correctamente.',
-            'participation_id': participation.id
+            'participation_id': participation.id,
+            'completed': complete
         }, status=status.HTTP_201_CREATED)
-        
+
     except Exception as e:
-        print(f"❌ Error general en submit_survey: {str(e)}")
         import traceback
         traceback.print_exc()
         return Response({

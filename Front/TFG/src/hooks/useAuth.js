@@ -1,5 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useFlashRedirect } from "./useFlashRedirect";
 import {
   loginUser,
   logoutUser,
@@ -29,6 +30,7 @@ import {
  */
 const useAuth = () => {
   const dispatch = useDispatch();
+  const { navigateWithFlash} = useFlashRedirect();
   const { user, accessToken, status } = useSelector((state) => state.user);
   const navigate = useNavigate();
 
@@ -92,12 +94,12 @@ const useAuth = () => {
 
       if (logoutUser.fulfilled.match(resultAction)) {
         // Logout successful
-        navigate("/");
+        navigateWithFlash("/", "Sesión cerrada", "success");
         localStorage.removeItem("isLoggedIn");
         return resultAction.payload;
       } else {
         // Logout fails on server, but proceed with client logout
-        navigate("/");
+        navigateWithFlash("/", "Sesión cerrada, error de servidor", "error");
         localStorage.removeItem("isLoggedIn");
 
         const errorMessage =
@@ -108,7 +110,7 @@ const useAuth = () => {
       }
     } catch (error) {
       // Logout fails on server, but proceed with client logout
-      navigate("/");
+      navigateWithFlash("/", "Sesión cerrada, error de servidor", "error");
       localStorage.removeItem("isLoggedIn");
       throw error;
     }

@@ -1,32 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import useUser from "../hooks/useUser";
-import { Navigate, Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 
 /**
- * A component that restricts access based on user roles and authentication status.
- *
- * @param {Object} props - The component props.
- * @param {Array} props.allowedRoles - An array of roles that are permitted to access the route.
- *
- * @returns {JSX.Element} - A component that either renders the nested routes or redirects to a login page if the user is not authenticated or does not have the required role.
- *
- * The component checks the user's authentication status and role to determine access.
- * If the user is not logged in, it redirects to the login page.
- * If the user does not have the required role, it redirects to the home page.
- * Displays a loading screen while determining the access status.
+ * Restricts access to certain roles.
+ * If user is not authenticated or lacks required role, redirects with flash message.
  */
-
 const RoleProtectedRoute = ({ allowedRoles }) => {
   const { user } = useUser();
+  const { navigateWithFlash } = useFlashRedirect();
   const [isReady, setIsReady] = useState(false);
   const accessToken = useSelector((state) => state.user.accessToken);
   const isLoggedIn = localStorage.getItem("accessToken");
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     let timer;
 
-    // Handling delays in order to check the user logged in
+    // Simulate loading (e.g., waiting for user data to load)
     if (!isLoggedIn) {
       setIsReady(true);
       return;
@@ -42,7 +36,6 @@ const RoleProtectedRoute = ({ allowedRoles }) => {
         setIsReady(true);
       }, 1000);
     } else {
-
       timer = setTimeout(() => {
         setIsReady(true);
       }, 300);
@@ -53,32 +46,22 @@ const RoleProtectedRoute = ({ allowedRoles }) => {
     };
   }, [user, accessToken, isLoggedIn]);
 
-  // Loader
-  if (!isReady) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        <div>Cargando...</div>
-      </div>
-    );
-  }
+  // Redirections after readiness check
+  useEffect(() => {
+    if (!isReady) return;
 
-  // Debug and redirect for not logged in
-  if (!isLoggedIn || !user) {
-        console.log("No has iniciado sesión");
+    if (!isLoggedIn || !user) {
+      navigateWithFlash("/login", "Debes iniciar sesión para acceder a esta sección.", "warning");
+      return;
+    }
 
-    return <Navigate to="/login" replace />;
-  }
+    if (allowedRoles && !allowedRoles.includes(user.role?.name)) {
+      navigateWithFlash("/", "No tienes permiso para acceder a esta sección.", "error");
+    }
+  }, [isReady, isLoggedIn, user, allowedRoles, navigateWithFlash]);
 
-  // Debug and redirect for not being admin
-  if (allowedRoles && !allowedRoles.includes(user.role?.name)) {
-    console.log("No tienes permisos para admin");
-    
-    return <Navigate to="/" replace />;
+  if (!isReady || !isLoggedIn || !user || (allowedRoles && !allowedRoles.includes(user.role?.name))) {
+    return null; // Esperamos a que el useEffect redirija
   }
 
   return <Outlet />;

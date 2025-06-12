@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 import useSurveys from "../hooks/useSurveys";
 import useInstance from "../hooks/useInstance";
 import { useSelector } from "react-redux";
 
 const SurveyDetail = () => {
   const survey = useSelector((state) => state.surveys.currentSurvey);
+  const {navigateWithFlash} = useFlashRedirect();
   const instances = useSelector((state) => state.instances.instances);
   const loading = useSelector((state) => state.surveys.loading);
   const error = useSelector((state) => state.surveys.error);
@@ -32,7 +34,7 @@ const SurveyDetail = () => {
     try {
       deleteSurveyById(surveyId);
       loadSurveys();
-      navigate("/mis-encuestas");
+      navigateWithFlash("/mis-encuestas", "Encuesta eliminada", "error");
     } catch (error) {
       alert("Error de conexión");
     } finally {

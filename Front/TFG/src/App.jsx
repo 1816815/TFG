@@ -2,6 +2,8 @@ import { BrowserRouter as Router } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import AppRoutes from "./Routes/AppRoutes";
 import AppInitializer from "./components/AppInitializer";
+import FlashMessage from "./components/FlashMessage";
+
 
 /**
  * The main component of the application, which wraps the app initialization
@@ -12,11 +14,11 @@ import AppInitializer from "./components/AppInitializer";
  * navigation bar and the routes.
  */
 const App = () => {
-  
+
+
   return (
     <AppInitializer>
       <Router>
-        <Navbar />
         <AppRoutes />
       </Router>
       </AppInitializer>

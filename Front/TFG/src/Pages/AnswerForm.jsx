@@ -4,9 +4,11 @@ import { useSurveySubmit } from "../hooks/useSubmit";
 import SingleQuestionComponent from "../components/SingleQuestionComponent";
 import useInstance from "../hooks/useInstance";
 import { useSelector } from "react-redux";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 
 const AnswerForm = () => {
   const { instanceId } = useParams();
+  const {navigateWithFlash} = useFlashRedirect();
   const navigate = useNavigate();
 
   const { loading, error } = useSelector((state) => state.instances);
@@ -28,6 +30,7 @@ const AnswerForm = () => {
     formIsDirty,
 
     submitSurvey,
+    savePartialAnswer,
     updateAnswer,
     setCurrentStep,
 
@@ -57,7 +60,7 @@ const AnswerForm = () => {
 
   useEffect(() => {
     if (submitSuccess && participationId) {
-      navigate(`/encuestas`);
+     navigateWithFlash("/encuestas", "Respuesta procesada, gracias por participar", "success");
     }
   }, [submitSuccess, participationId, navigate]);
 
@@ -80,7 +83,7 @@ const AnswerForm = () => {
       console.log("Enviando respuestas al backend:", JSON.stringify(formattedAnswers, null, 2));
 
       
-       submitSurvey(instanceId, { answers: formattedAnswers });
+       submitSurvey(instanceId, { answers: formattedAnswers, completed: true });
     } catch (error) {
       console.error("Error submitting survey:", error);
     }

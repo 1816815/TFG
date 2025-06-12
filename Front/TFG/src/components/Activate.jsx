@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 import useAuth from "../hooks/useAuth";
 
 /**
@@ -11,6 +12,7 @@ import useAuth from "../hooks/useAuth";
 const Activate = () => {
   const { uid, token } = useParams();
   const { activateProfile } = useAuth();
+  const { navigateWithFlash } = useFlashRedirect();
   const [message, setMessage] = useState("Activando tu cuenta...");
   const navigate = useNavigate();
 
@@ -18,8 +20,7 @@ const Activate = () => {
     const activate = async () => {
       try {
         await activateProfile(uid, token);
-        setMessage("✅ Cuenta activada correctamente. Puedes iniciar sesión.");
-        setTimeout(() => navigate("/login"), 3000);
+        navigateWithFlash("/login", "Cuenta activada correctamente. Puedes iniciar sesión.");
       } catch (error) {
         setMessage("❌ Error al activar la cuenta. El enlace puede estar expirado o ser inválido.");
       }
