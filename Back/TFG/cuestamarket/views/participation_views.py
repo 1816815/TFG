@@ -45,17 +45,15 @@ class ParticipationResultsAPIView(APIView):
                     'date': answer.date
                 }
                 
-                # Obtener opciones seleccionadas usando AnswerOption
-                if answer.question.type in ['single_choice', 'multiple_choice']:
+                # Obtener opciones seleccionadas
+                if answer.question.type == 'single' and answer.option:
+                    answer_data['selected_options'] = [answer.option.id]
+
+                elif answer.question.type == 'multiple':
                     selected_options = answer.selected_options.all()
-                    answer_data['selected_options'] = [
-                        {
-                            'id': so.option.id,
-                            'content': so.option.content,
-                            'selected_at': so.created_at
-                        }
-                        for so in selected_options
-                    ]
+                    answer_data['selected_options'] = [so.option.id for so in selected_options]
+
+
                 
                 answers_data.append(answer_data)
             

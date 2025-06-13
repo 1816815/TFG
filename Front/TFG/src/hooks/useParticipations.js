@@ -27,6 +27,7 @@ export const useParticipation = () => {
   };
 
   const loadParticipationResults = (participationId) => {
+    
     return dispatch(fetchParticipationResults(participationId));
   };
 

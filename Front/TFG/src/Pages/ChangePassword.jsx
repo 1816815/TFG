@@ -3,7 +3,7 @@ import { useState } from "react";
 import useAuth from "../hooks/useAuth";
 
 const ChangePassword = () => {
-  const { validatePassword ,editPassword: changePassword } = useAuth();
+  const { validatePassword, editPassword: changePassword } = useAuth();
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
@@ -15,63 +15,79 @@ const ChangePassword = () => {
     formState: { errors },
   } = useForm();
 
-const onSubmit = async (data) => {
-  setMessage(null);
-  setError(null);
+  const onSubmit = async (data) => {
+    setMessage(null);
+    setError(null);
 
-  try {
+    try {
+      await validatePassword(data.newPassword);
+      await changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
 
-    await validatePassword(data.newPassword);
-
-    await changePassword({
-      currentPassword: data.currentPassword,
-      newPassword: data.newPassword,
-    });
-
-    setMessage("Contraseña actualizada correctamente.");
-    reset();
-  } catch (err) {
-    
-    const errMsg = Array.isArray(err) ? err.join(" ") : err.error || "Error al cambiar la contraseña.";
-    setError(errMsg);
-  }
-};
-
+      setMessage("Contraseña actualizada correctamente.");
+      reset();
+    } catch (err) {
+      const errMsg = Array.isArray(err)
+        ? err.join(" ")
+        : err.error || "Error al cambiar la contraseña.";
+      setError(errMsg);
+    }
+  };
 
   return (
-    <div className="change-password-form">
-      <h2>Cambiar contraseña</h2>
+    <div className="mt-4">
+      <h5 className="mb-3">Cambiar contraseña</h5>
+
+      {message && <div className="alert alert-success">{message}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
+
       <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          type="password"
-          placeholder="Contraseña actual"
-          {...register("currentPassword", { required: "Campo obligatorio" })}
-        />
-        {errors.currentPassword && <p>{errors.currentPassword.message}</p>}
+        <div className="mb-3">
+          <label className="form-label">Contraseña actual</label>
+          <input
+            type="password"
+            className="form-control"
+            {...register("currentPassword", { required: "Campo obligatorio" })}
+          />
+          {errors.currentPassword && (
+            <div className="text-danger">{errors.currentPassword.message}</div>
+          )}
+        </div>
 
-        <input
-          type="password"
-          placeholder="Nueva contraseña"
-          {...register("newPassword", { required: "Campo obligatorio" })}
-        />
-        {errors.newPassword && <p>{errors.newPassword.message}</p>}
+        <div className="mb-3">
+          <label className="form-label">Nueva contraseña</label>
+          <input
+            type="password"
+            className="form-control"
+            {...register("newPassword", { required: "Campo obligatorio" })}
+          />
+          {errors.newPassword && (
+            <div className="text-danger">{errors.newPassword.message}</div>
+          )}
+        </div>
 
-        <input
-          type="password"
-          placeholder="Confirmar nueva contraseña"
-          {...register("confirmPassword", {
-            required: "Campo obligatorio",
-            validate: (value) =>
-              value === watch("newPassword") || "Las contraseñas no coinciden",
-          })}
-        />
-        {errors.confirmPassword && <p>{errors.confirmPassword.message}</p>}
+        <div className="mb-3">
+          <label className="form-label">Confirmar nueva contraseña</label>
+          <input
+            type="password"
+            className="form-control"
+            {...register("confirmPassword", {
+              required: "Campo obligatorio",
+              validate: (value) =>
+                value === watch("newPassword") || "Las contraseñas no coinciden",
+            })}
+          />
+          {errors.confirmPassword && (
+            <div className="text-danger">{errors.confirmPassword.message}</div>
+          )}
+        </div>
 
-        <button type="submit">Actualizar contraseña</button>
+        <button type="submit" className="btn btn-primary">
+          Actualizar contraseña
+        </button>
       </form>
-
-      {message && <p className="success">{message}</p>}
-      {error && <p className="error">{error}</p>}
     </div>
   );
 };

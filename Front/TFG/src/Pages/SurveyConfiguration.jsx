@@ -4,15 +4,17 @@ import ExportButton from "../components/ExportButton";
 import useInstance from "../hooks/useInstance";
 import useParticipation from "../hooks/useParticipations";
 import { useParams } from "react-router-dom";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 
 
 const SurveyConfiguration = () => {
-  const { instanceId } = useParams();
+  const { surveyId, instanceId } = useParams();
   const { loadInstanceById } = useInstance();
   const { loadParticipations, removeParticipation, loadExportData } =
     useParticipation();
 
   const instance = useSelector((state) => state.instances.currentInstance);
+  const {navigateWithFlash} = useFlashRedirect();
   const questions = instance?.survey_questions || [];
   const loadingInstances = useSelector((state) => state.instances.loading);
   const loadingExport = useSelector((state) => state.participations.loading);
@@ -53,6 +55,7 @@ const handleDeleteParticipation = (participationId) => {
         page_size: pageSize,
       })
     );
+    navigateWithFlash(`/encuesta/${surveyId}/configuracion/${instanceId}`, "Participación eliminada", "error");
   }
 };
 

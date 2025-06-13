@@ -105,6 +105,8 @@ const participationSlice = createSlice({
       
       // Fetch Participation Results
       .addCase(fetchParticipationResults.fulfilled, (state, action) => {
+        console.log(action.payload);
+        
         state.currentParticipation = action.payload;
       })
       

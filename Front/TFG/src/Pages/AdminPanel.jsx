@@ -11,9 +11,26 @@ function AdminPanel() {
   const [editingUser, setEditingUser] = useState(null);
   const [showInactive, setShowInactive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
 
   const users = useSelector((state) => state.user.users);
   let error = "";
+
+  const filteredUsers = (
+    showInactive ? users : users.filter((u) => u.is_active)
+  )
+    .filter((u) => {
+      const term = searchTerm.toLowerCase();
+      return (
+        u.username.toLowerCase().includes(term) ||
+        u.email.toLowerCase().includes(term)
+      );
+    })
+    .filter((u) => {
+      if (!selectedRole) return true;
+      return u.role?.id === parseInt(selectedRole);
+    });
 
   const {
     handleSubmit,
@@ -91,6 +108,28 @@ function AdminPanel() {
     }
   };
 
+  const roleMap = {
+    admin: { label: "Administrador", className: "badge bg-danger" },
+    client: { label: "Cliente", className: "badge bg-primary" },
+    voter: { label: "Votante", className: "badge bg-success" },
+  };
+
+  const getRoleDisplay = (roleKey) => {
+    const role = roleMap[roleKey?.toLowerCase()];
+    return (
+      role || {
+        label: roleKey || "Desconocido",
+        className: "badge bg-secondary",
+      }
+    );
+  };
+
+  const roleLabelMap = {
+    admin: "Administrador",
+    client: "Cliente",
+    voter: "Votante",
+  };
+
   const onSubmit = async (formData) => {
     setIsSubmitting(true);
     setError(null);
@@ -131,7 +170,6 @@ function AdminPanel() {
       setIsSubmitting(false);
     }
   };
-  const filteredUsers = showInactive ? users : users.filter((u) => u.is_active);
 
   return (
     <div className="container mt-4">
@@ -150,21 +188,63 @@ function AdminPanel() {
       )}
 
       {!editingUser ? (
-        <div className="d-flex gap-3 mb-3">
-          <button className="btn btn-primary" onClick={handleCreate}>
-            Crear Nuevo Usuario
-          </button>
-          <label className="form-check-label">
-            <input
-              type="checkbox"
-              name="showInactive"
-              id="showInactive"
-              className="form-check-input"
-              checked={showInactive}
-              onChange={() => setShowInactive(!showInactive)}
-            />
-            Mostrar inactivos
-          </label>
+        <div className="card mb-4 p-3 shadow-sm">
+          <div className="row g-3 align-items-end">
+            <div className="col-md-4">
+              <label htmlFor="searchTerm" className="form-label">
+                Buscar por nombre o email
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="searchTerm"
+                placeholder="juan, ejemplo@correo.com..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="col-md-3">
+              <label htmlFor="selectedRole" className="form-label">
+                Filtrar por rol
+              </label>
+              <select
+                id="selectedRole"
+                className="form-select"
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+              >
+                <option value="">Todos los roles</option>
+                {roles.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {roleLabelMap[r.name] || r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-md-3">
+              <div className="form-check mt-4">
+                <input
+                  type="checkbox"
+                  id="showInactive"
+                  className="form-check-input"
+                  checked={showInactive}
+                  onChange={() => setShowInactive(!showInactive)}
+                />
+                <label htmlFor="showInactive" className="form-check-label">
+                  Mostrar usuarios inactivos
+                </label>
+              </div>
+            </div>
+
+            <div className="col-md-2 text-md-end mt-4">
+              <button className="btn btn-primary w-100" onClick={handleCreate}>
+                <i className="fas fa-user-plus me-2"></i>
+                Nuevo Usuario
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="card p-4 mb-4">
@@ -223,7 +303,7 @@ function AdminPanel() {
                   <option value="">Seleccionar rol</option>
                   {roles.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.name}
+                      {roleLabelMap[r.name] || r.name}
                     </option>
                   ))}
                 </select>
@@ -313,7 +393,8 @@ function AdminPanel() {
       <ul className="list-group">
         {filteredUsers.length === 0 ? (
           <p className="mt-3">
-            No hay usuarios {showInactive ? "" : "activos"}.
+            No hay usuarios {showInactive ? "" : "activos"} que coincidan con
+            los términos de búsqueda.
           </p>
         ) : (
           filteredUsers.map((u) => (
@@ -325,7 +406,16 @@ function AdminPanel() {
             >
               <div>
                 <strong>{u.username}</strong> ({u.email}) -{" "}
-                {u.role?.name || "Sin rol"}
+                {(u.role?.name &&
+                  (() => {
+                    const role = getRoleDisplay(u.role.name);
+                    return (
+                      <span className={`ms-2 ${role.className}`}>
+                        {role.label}
+                      </span>
+                    );
+                  })()) ||
+                  "Sin rol"}
                 {!u.is_active && (
                   <span className="text-muted"> (Inactivo)</span>
                 )}

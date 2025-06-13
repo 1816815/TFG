@@ -1,5 +1,5 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { useCallback } from 'react';
+import { useDispatch, useSelector } from "react-redux";
+import { useCallback } from "react";
 import {
   submitSurvey,
   getParticipationResults,
@@ -24,19 +24,18 @@ import {
   selectFormAnswers,
   selectCurrentStep,
   selectFormProgress,
-  selectFormIsDirty
-} from '../Redux/slices/submitSlice';
-
+  selectFormIsDirty,
+} from "../Redux/slices/submitSlice";
 
 export const useSurveySubmit = () => {
   const dispatch = useDispatch();
-  
+
   // Selectors
   const submitState = useSelector(selectSubmitState);
   const participationResults = useSelector(selectParticipationResults);
   const surveyStats = useSelector(selectSurveyStats);
   const formState = useSelector(selectFormState);
-  
+
   // Specific selectors
   const isSubmitting = useSelector(selectIsSubmitting);
   const submitSuccess = useSelector(selectSubmitSuccess);
@@ -48,30 +47,47 @@ export const useSurveySubmit = () => {
   const formIsDirty = useSelector(selectFormIsDirty);
 
   // Actions
-  const handleSubmitSurvey = useCallback((instanceId, data) => {
-    return dispatch(submitSurvey({ instanceId, data }));
-  }, [dispatch]);
+  const handleSubmitSurvey = useCallback(
+    (instanceId, data) => {
+      return dispatch(submitSurvey({ instanceId, data }));
+    },
+    [dispatch]
+  );
 
-  const handleGetParticipationResults = useCallback((participationId) => {
-    return dispatch(getParticipationResults(participationId));
-  }, [dispatch]);
+  const handleGetParticipationResults = useCallback(
+    (participationId) => {
+      return dispatch(getParticipationResults(participationId));
+    },
+    [dispatch]
+  );
 
-  const handleGetSurveyStats = useCallback((surveyId, instanceId) => {
-    return dispatch(getSurveyStats({ surveyId, instanceId }));
-  }, [dispatch]);
+  const handleGetSurveyStats = useCallback(
+    (surveyId, instanceId) => {
+      return dispatch(getSurveyStats({ surveyId, instanceId }));
+    },
+    [dispatch]
+  );
 
-  const handleUpdateAnswer = useCallback((questionId, answerData) => {
-    dispatch(updateAnswer({ questionId, answerData }));
-  }, [dispatch]);
+  const handleUpdateAnswer = useCallback(
+    (questionId, answerData) => {
+      dispatch(updateAnswer({ questionId, answerData }));
+    },
+    [dispatch]
+  );
 
-  const handleSetCurrentStep = useCallback((step) => {
-    dispatch(setCurrentStep(step));
-  }, [dispatch]);
+  const handleSetCurrentStep = useCallback(
+    (step) => {
+      dispatch(setCurrentStep(step));
+    },
+    [dispatch]
+  );
 
-  const handleSetFormProgress = useCallback((progress) => {
-    dispatch(setFormProgress(progress));
-  }, [dispatch]);
-
+  const handleSetFormProgress = useCallback(
+    (progress) => {
+      dispatch(setFormProgress(progress));
+    },
+    [dispatch]
+  );
 
   // Reset actions
   const handleResetForm = useCallback(() => {
@@ -99,57 +115,64 @@ export const useSurveySubmit = () => {
   }, [dispatch]);
 
   // Utility functions
-  const formatAnswersForSubmit = useCallback((questions) => {
-    return Object.entries(formAnswers).map(([questionId, answerData]) => {
-      const question = questions.find(q => q.id === parseInt(questionId));
-      
-      
-      const baseAnswer = {
-        question_id: parseInt(questionId)
-      };
+  const formatAnswersForSubmit = useCallback(
+    (questions) => {
+      return Object.entries(formAnswers).map(([questionId, answerData]) => {
+        const question = questions.find((q) => q.id === parseInt(questionId));
 
-      switch (question?.type) {
-        case 'single':
-          return {
-            ...baseAnswer,
-            option_id: answerData.selectedOption
-          };
+        const baseAnswer = {
+          question_id: parseInt(questionId),
+        };
 
-        case 'multiple':
-          return {
-            ...baseAnswer,
-            option_ids: answerData.selectedOptions || []
-          };
+        switch (question?.type) {
+          case "single":
+            return {
+              ...baseAnswer,
+              option_id: answerData.selectedOption,
+            };
 
+          case "multiple":
+            return {
+              ...baseAnswer,
+              option_ids: answerData.selectedOptions || [],
+            };
 
-        case 'text':
-      return {
-            ...baseAnswer,
-            content: answerData.content || ''
-          };
+          case "text":
+            return {
+              ...baseAnswer,
+              content: answerData.content || "",
+            };
 
-        default:
-          return baseAnswer;
-      }
-    });
-  }, [formAnswers]);
+          default:
+            return baseAnswer;
+        }
+      });
+    },
+    [formAnswers]
+  );
 
+  const calculateProgress = useCallback(
+    (questions) => {
+      const answeredQuestions = Object.keys(formAnswers).length;
+      const totalQuestions = questions.length;
+      const progress =
+        totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
 
-  const calculateProgress = useCallback((questions) => {
-    const answeredQuestions = Object.keys(formAnswers).length;
-    const totalQuestions = questions.length;
-    const progress = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
-    
-    handleSetFormProgress(progress);
-    return progress;
-  }, [formAnswers, handleSetFormProgress]);
+      handleSetFormProgress(progress);
+      return progress;
+    },
+    [formAnswers, handleSetFormProgress]
+  );
 
   // Navigation helpers
-  const goToNextStep = useCallback((totalSteps) => {
-    if (currentStep < totalSteps - 1) {
-      handleSetCurrentStep(currentStep + 1);
-    }
-  }, [currentStep, handleSetCurrentStep]);
+  const goToNextStep = useCallback(
+    (totalSteps) => {
+      if (currentStep < totalSteps - 1) {
+        handleSetCurrentStep(currentStep + 1);
+      }
+    },
+    [currentStep, handleSetCurrentStep]
+  );
 
   const goToPreviousStep = useCallback(() => {
     if (currentStep > 0) {
@@ -157,28 +180,31 @@ export const useSurveySubmit = () => {
     }
   }, [currentStep, handleSetCurrentStep]);
 
-  const goToStep = useCallback((step, totalSteps) => {
-    if (step >= 0 && step < totalSteps) {
-      handleSetCurrentStep(step);
+  const goToStep = useCallback(
+    (step, totalSteps) => {
+      if (step >= 0 && step < totalSteps) {
+        handleSetCurrentStep(step);
+      }
+    },
+    [handleSetCurrentStep]
+  );
+
+  const savePartialAnswer = async (instanceId, formattedAnswers) => {
+
+    try {
+      dispatch(
+        submitSurvey({
+          instanceId: instanceId,
+          data: {
+            answers: formattedAnswers,
+            complete: false,
+          },
+        })
+      );
+    } catch (error) {
+      console.error("Error al guardar respuestas parciales:", error);
     }
-  }, [handleSetCurrentStep]);
-
-const savePartialAnswer = async (formattedAnswers, instanceId) => {
-  
-  try {
-     submitSurvey(instanceId, {
-      answers: formattedAnswers,
-      complete: false,
-    });
-  } catch (error) {
-    console.error("Error al guardar respuestas parciales:", error);
-  }
-};
-
-
-
-
-
+  };
 
   return {
     // State
@@ -186,7 +212,7 @@ const savePartialAnswer = async (formattedAnswers, instanceId) => {
     participationResults,
     surveyStats,
     formState,
-    
+
     // Specific state values
     isSubmitting,
     submitSuccess,
@@ -196,7 +222,7 @@ const savePartialAnswer = async (formattedAnswers, instanceId) => {
     currentStep,
     formProgress,
     formIsDirty,
-    
+
     // Actions
     submitSurvey: handleSubmitSurvey,
     getParticipationResults: handleGetParticipationResults,
@@ -206,7 +232,6 @@ const savePartialAnswer = async (formattedAnswers, instanceId) => {
     setFormProgress: handleSetFormProgress,
     savePartialAnswer,
 
-    
     // Reset actions
     resetForm: handleResetForm,
     resetSubmitState: handleResetSubmitState,
@@ -214,19 +239,19 @@ const savePartialAnswer = async (formattedAnswers, instanceId) => {
     clearParticipationResults: handleClearParticipationResults,
     clearSurveyStats: handleClearSurveyStats,
     resetAllStates: handleResetAllStates,
-    
+
     // Utility functions
     formatAnswersForSubmit,
     calculateProgress,
-    
+
     // Navigation helpers
     goToNextStep,
     goToPreviousStep,
     goToStep,
-    
+
     // Computed values
     isFirstStep: currentStep === 0,
     isLastStep: (totalSteps) => currentStep === totalSteps - 1,
-    hasUnsavedChanges: formIsDirty
+    hasUnsavedChanges: formIsDirty,
   };
 };

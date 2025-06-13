@@ -21,6 +21,8 @@ import ForgotPassword from "../Pages/ForgotPassword";
 import ResetPassword from "../Pages/ResetPassword";
 import ChangePassword from "../Pages/ChangePassword";
 import Layout from "./Layout";
+import LandingPage from "../Pages/LandingPage";
+import NotFound from "../components/NotFound";
 
 
 
@@ -48,7 +50,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-      <Route path="/" element={<ChartDemo />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/crono" element={<Crono />} />
       <Route path="/login" element={<Auth />} />
       <Route path="/register" element={<Auth />} />
@@ -56,6 +58,7 @@ const AppRoutes = () => {
        <Route path="/activar/:uid/:token" element={<Activate />} />
        <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+      <Route path="*" element={<NotFound />} />
 
 
 

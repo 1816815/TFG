@@ -10,7 +10,7 @@ export const participationService = {
   },
 
   async getResults(participationId) {
-    return await apiClient.get(`/participation-results/${participationId}/`, {
+    return await apiClient.get(`/participations/${participationId}/results/`, {
       credentials: "include",
     });
   },
