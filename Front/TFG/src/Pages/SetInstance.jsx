@@ -22,7 +22,7 @@ const SetInstance = () => {
 
   useEffect(() => {
     loadSurveyById(surveyId);
-  }, [surveyId, loadSurveyById]);
+  }, [surveyId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

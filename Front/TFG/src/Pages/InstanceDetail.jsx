@@ -61,7 +61,7 @@ const handleSubmit = async (e) => {
       payload.closure_date = chosenDate.toISOString();
     }
     
-    const resultAction = updateExistingInstance(instanceId, payload);
+    const resultAction = await updateExistingInstance(instanceId, payload);
 
     if (resultAction?.type?.endsWith("/fulfilled")) {
       setMessage("Instancia actualizada correctamente.");

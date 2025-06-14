@@ -1,10 +1,8 @@
-
-
 const SingleQuestionComponent = ({ question, answer, onAnswerChange }) => {
   const handleSingleChoiceChange = (optionId) => {
     onAnswerChange({
       question_id: question.id,
-      selectedOption: optionId
+      selectedOption: optionId,
     });
   };
 
@@ -15,14 +13,14 @@ const SingleQuestionComponent = ({ question, answer, onAnswerChange }) => {
       : [...selected, optionId];
     onAnswerChange({
       question_id: question.id,
-      selectedOptions: updated
+      selectedOptions: updated,
     });
   };
 
   const handleOpenChange = (e) => {
     onAnswerChange({
       question_id: question.id,
-      content: e.target.value
+      content: e.target.value,
     });
   };
 
@@ -30,40 +28,53 @@ const SingleQuestionComponent = ({ question, answer, onAnswerChange }) => {
     <div className="mb-4">
       <p className="fw-bold">{question.content}</p>
 
-      {question.type === "single" &&
-  question.options.map((option) => {
-    const isSelected = answer?.selectedOption === option.id;
-
-    return (
-      <div className="form-check" key={option.id}>
-        <input
-          className="form-check-input"
-          type="radio"
-          name={`question_${question.id}`}
-          value={option.id}
-          id={`option_${option.id}`}
-          checked={isSelected}
-          onClick={(e) => {
-            if (isSelected) {
-              e.preventDefault();
+      {question.type === "single" && (
+        <>
+          {question.options.map((option) => {
+            const isSelected = answer?.selectedOption === option.id;
+            return (
+              <div className="form-check" key={option.id}>
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name={`question_${question.id}`}
+                  value={option.id}
+                  id={`option_${option.id}`}
+                  checked={isSelected}
+                  onChange={() =>
+                    onAnswerChange({
+                      question_id: question.id,
+                      selectedOption: option.id,
+                    })
+                  }
+                />
+                <label
+                  className="form-check-label"
+                  htmlFor={`option_${option.id}`}
+                >
+                  {option.content}
+                </label>
+              </div>
+            );
+          })}
+          {/* Botón para borrar selección */}
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm mt-2"
+            onClick={() =>
               onAnswerChange({
                 question_id: question.id,
                 selectedOption: null,
-              });
+              })
             }
-          }}
-          onChange={() => handleSingleChoiceChange(option.id)}
-        />
-        <label className="form-check-label" htmlFor={`option_${option.id}`}>
-          {option.content}
-        </label>
-      </div>
-    );
-  })}
+            disabled={answer?.selectedOption == null}
+          >
+            Borrar selección
+          </button>
+        </>
+      )}
 
       {question.type === "multiple" &&
-      
-      
         question.options.map((option) => (
           <div className="form-check" key={option.id}>
             <input
@@ -94,6 +105,5 @@ const SingleQuestionComponent = ({ question, answer, onAnswerChange }) => {
     </div>
   );
 };
-
 
 export default SingleQuestionComponent;

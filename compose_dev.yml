@@ -1,4 +1,25 @@
 services:
+  db:
+    image: mariadb:11
+    container_name: ${APP_NAME}_db
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=${SQL_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${SQL_DATABASE}
+      - MARIADB_USER=${SQL_USER}
+      - MARIADB_PASSWORD=${SQL_PASSWORD}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      cuestamarket-net:
+        ipv4_address: 172.30.88.2
+    ports:
+      - ${MARIADB_PORT}:3306
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb -hlocalhost -u$SQL_USER -p$SQL_PASSWORD -e 'SELECT 1;' $SQL_DATABASE"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
   backend:
     build: ./Back/
@@ -10,17 +31,22 @@ services:
       - MARIADB_PASSWORD=${SQL_PASSWORD}
       - MARIADB_HOST=db
       - MARIADB_PORT=3306
-
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - MYPROJECT_STAGE=${MYPROJECT_STAGE}
     volumes:
       - ./Back/TFG:/usr/src/app/
-
+      - /srv/cuestamarket/backend_static/:/usr/src/app/staticfiles/
     ports:
       - ${HTTP_PORT}:8000
-
-    networks:
-      - tfg
-
+    depends_on:
+      db:
+        condition: service_healthy
     restart: always
+    networks:
+      cuestamarket-net:
+        ipv4_address: 172.30.88.10
 
   frontend:
     build: ./Front/
@@ -36,15 +62,21 @@ services:
     ports:
       - ${REACT_PORT}:5173
       - 24678:24678
-    networks:
-      - tfg
     depends_on:
       - backend
     restart: always
-
-networks:
-  tfg:
-    name: ${APP_NAME}_network
+    networks:
+      cuestamarket-net:
+        ipv4_address: 172.30.88.11
 
 volumes:
- node_modules:
+  node_modules:
+  mariadb_data:
+
+networks:
+  cuestamarket-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.88.0/24
+          gateway: 172.30.88.1
