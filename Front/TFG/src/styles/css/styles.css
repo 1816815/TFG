@@ -120,7 +120,7 @@ button:active {
 }
 
 .footer {
-  margin-top: auto;
+  margin-top: 5% !important;
   width: 100%;
   padding: 1rem 0;
 }
