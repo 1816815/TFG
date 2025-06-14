@@ -1,5 +1,5 @@
 import os 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'cuestamarket.duckdns.org', 'api.cuestamarket.duckdns.org']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'cuestamarket.duckdns.org', 'api.cuestamarket.duckdns.org', '91.99.94.146']
 DEBUG = False
 from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
