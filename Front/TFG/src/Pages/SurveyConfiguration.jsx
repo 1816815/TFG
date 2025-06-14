@@ -138,12 +138,10 @@ const handleDeleteParticipation = (participationId) => {
         {error && <p className="text-danger">{error}</p>}
         {loadingExport && <p>Cargando datos para exportar...</p>}
 
-        {!loadingExport && exportData && (
+        {!loadingExport && exportData && instance && (
           <ExportButton
-            data={exportData.data}
-            headers={exportData.headers}
-            surveyTitle={exportData.surveyTitle}
-            exportDate={exportData.exportDate}
+            exportData={exportData}
+            instance={instance}
           />
         )}
       </section>

@@ -7,7 +7,7 @@ from ..serializers import ParticipationSerializer
 
 
 class ParticipationResultsAPIView(APIView):
-    """API para obtener las respuestas de una participación con manejo completo de AnswerOption"""
+    """API para obtener las respuestas de una participación"""
     
     def get(self, request, participation_id):
         try:

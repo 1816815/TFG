@@ -170,7 +170,10 @@ class SurveyConfigurationViewSet(viewsets.ViewSet):
         instance = self.get_survey_instance(instance_id)
         
         export_data = []
-        participations = instance.participations.filter(state='completed')
+        participations = instance.participations.filter(
+        state__in=['in_progress', 'completed']
+        ).order_by('-date')
+
         
         for participation in participations:
             row = {
@@ -185,7 +188,7 @@ class SurveyConfigurationViewSet(viewsets.ViewSet):
                     question=question
                 ).first()
                 
-                column_name = f'pregunta_{question.id}_{question.content[:50]}'  # Usar ID + contenido truncado
+                column_name = f'{question.content}'  
                 
                 if answer:
                     if question.type == 'multiple':
@@ -244,7 +247,7 @@ class SurveyConfigurationViewSet(viewsets.ViewSet):
                     question=question
                 ).count()
                 completion_percentage = round((answered_count / total_participations) * 100, 2)
-                stats['completion_rate'][f'pregunta_{question.id}'] = completion_percentage
+                stats['completion_rate'][f'{question.content}'] = completion_percentage
         
         return Response({
             'data': export_data,
