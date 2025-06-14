@@ -3,16 +3,8 @@
 export const QuestionSelector = ({questions, formAnswers, setCurrentStep}) => {
   return (
     <div
-              className="me-md-4 mb-4 mb-md-0"
-              style={{
-                minWidth: "80px",
-                position: "sticky",
-                top: "80px",
-                height: "fit-content",
-                maxHeight: "calc(100vh - 100px)",
-                overflowY: "auto",
-                paddingRight: "0.5rem",
-              }}
+              className="me-md-4 mb-4 mb-md-0 selector"
+              
             >
               <h6 className="text-muted mb-2">Preguntas</h6>
               <div

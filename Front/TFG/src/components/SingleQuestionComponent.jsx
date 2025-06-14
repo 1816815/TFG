@@ -31,22 +31,35 @@ const SingleQuestionComponent = ({ question, answer, onAnswerChange }) => {
       <p className="fw-bold">{question.content}</p>
 
       {question.type === "single" &&
-        question.options.map((option) => (
-          <div className="form-check" key={option.id}>
-            <input
-              className="form-check-input"
-              type="radio"
-              name={`question_${question.id}`}
-              value={option.id}
-              id={`option_${option.id}`}
-              checked={answer?.selectedOption === option.id}
-              onChange={() => handleSingleChoiceChange(option.id)}
-            />
-            <label className="form-check-label" htmlFor={`option_${option.id}`}>
-              {option.content}
-            </label>
-          </div>
-        ))}
+  question.options.map((option) => {
+    const isSelected = answer?.selectedOption === option.id;
+
+    return (
+      <div className="form-check" key={option.id}>
+        <input
+          className="form-check-input"
+          type="radio"
+          name={`question_${question.id}`}
+          value={option.id}
+          id={`option_${option.id}`}
+          checked={isSelected}
+          onClick={(e) => {
+            if (isSelected) {
+              e.preventDefault();
+              onAnswerChange({
+                question_id: question.id,
+                selectedOption: null,
+              });
+            }
+          }}
+          onChange={() => handleSingleChoiceChange(option.id)}
+        />
+        <label className="form-check-label" htmlFor={`option_${option.id}`}>
+          {option.content}
+        </label>
+      </div>
+    );
+  })}
 
       {question.type === "multiple" &&
       

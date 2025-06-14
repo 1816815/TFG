@@ -41,11 +41,6 @@ const SurveyConfiguration = () => {
 
   const participations = useSelector((state) => state.participations.items);
 
-  useEffect(() => {
-    if (instanceId) {
-      loadExportData(instanceId);
-    }
-  }, [participations]);
 
 const handleDeleteParticipation = (participationId) => {
   if (window.confirm("¿Estás seguro de que deseas eliminar esta participación?")) {
