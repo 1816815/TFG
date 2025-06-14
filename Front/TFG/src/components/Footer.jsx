@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-dark text-light pt-5 pb-3 mt-auto footer">
+    <footer className="pt-5 pb-3 footer">
       <div className="container">
         <div className="row">
 
@@ -43,7 +43,7 @@ const Footer = () => {
 
         <hr className="border-secondary" />
 
-        <div className="text-center small text-muted">
+        <div className="text-center small ">
           © {new Date().getFullYear()} Cuestamarket. Todos los derechos reservados.
         </div>
       </div>

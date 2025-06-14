@@ -4,11 +4,11 @@ const LandingPage = () => {
   return (
     <div className="landing-page bg-light text-dark">
  
-      <section className="bg-secondary text-white text-center py-5">
+      <section className="landing text-white text-center py-5">
         <div className="container">
           <h1 className="display-4 fw-bold">CuestaMarket</h1>
           <p className="lead">Estudios de mercado a través de encuestas digitales</p>
-          <Link to="/register" className="btn btn-light btn-lg mt-3">
+          <Link to="/register" className="btn btn-primary btn-lg">
             Empezar ahora
           </Link>
         </div>

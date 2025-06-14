@@ -20,6 +20,14 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   min-height: 100vh;
 }
 
+.landing {
+  background-image: url("../../assets/img/graphs.gif") !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-position: center 90% !important;
+}
+
 a {
   color: #279af1;
   text-decoration: none;
@@ -78,7 +86,9 @@ button:active {
 }
 
 .navbar-toggler-icon {
-  background-color: #f7f7ff;
+  background-color: #a020f0;
+  color: #f7f7ff;
+  border: 1px solid #f7f7ff;
 }
 
 .navbar-collapse.show {
@@ -123,6 +133,8 @@ button:active {
   margin-top: 5% !important;
   width: 100%;
   padding: 1rem 0;
+  background-color: #131112;
+  color: #f7f7ff;
 }
 
 .footer a:hover {

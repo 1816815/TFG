@@ -33,6 +33,14 @@ h1, h2, h3, h4, h5, h6 {
   min-height: 100vh;
 }
 
+.landing{
+  background-image: url("../../assets/img/graphs.gif") !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-position: center 90% !important;
+}
+
 // Enlaces y botones
 a {
   color: $celestial-blue;
@@ -112,9 +120,11 @@ button {
     background-color: $primary;
   }
   
-  .navbar-toggler-icon {
-    background-color: $ghost-white;
-  }
+.navbar-toggler-icon {
+  background-color: $primary;
+  color: $ghost-white;
+  border: 1px solid $ghost-white;
+}
 
   .navbar-collapse.show {
     background-color: $primary;
@@ -165,6 +175,8 @@ button {
   margin-top: 5% !important;
   width: 100%;
   padding: 1rem 0;
+  background-color: $night;
+  color: $ghost-white;
 }
 .footer a:hover{
   color: $veronica !important;
