@@ -82,7 +82,7 @@ const Profile = () => {
                 <strong>Email:</strong> {user.email}
               </p>
               <p>
-                <strong>Rol:</strong> {user.role?.name || "Sin especificar"}
+                <strong>Rol:</strong> {formatRole(user.role?.name) || "Sin especificar"}
               </p>
             </>
           ) : (
