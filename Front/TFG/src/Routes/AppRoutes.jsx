@@ -23,6 +23,7 @@ import ChangePassword from "../Pages/ChangePassword";
 import Layout from "./Layout";
 import LandingPage from "../Pages/LandingPage";
 import NotFound from "../components/NotFound";
+import { SurveyStats } from "../Pages/SurveyStats";
 
 
 
@@ -74,6 +75,7 @@ const AppRoutes = () => {
          <Route path="/encuesta/:surveyId/instanciar" element={<SetInstance />} />
          <Route path="/encuesta/:surveyId/lista" element={<InstancesList />} />
          <Route path="/encuesta/:surveyId/configuracion/:instanceId" element={<SurveyConfiguration />} />
+          <Route path="/encuesta/:surveyId/estadisticas/:instanceId" element={<SurveyStats />} />
          <Route path="/encuesta/:surveyId/instancia/:instanceId" element={<InstanceDetail />} />
     </Route>
 

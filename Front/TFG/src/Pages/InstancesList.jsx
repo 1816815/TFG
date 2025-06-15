@@ -68,7 +68,7 @@ const InstancesList = () => {
   };
 
   const handleViewResults = (instanceId) => {
-    navigate(`/encuesta/${surveyId}/instancia/${instanceId}/resultados`);
+    navigate(`/encuesta/${surveyId}/estadisticas/${instanceId}`);
   };
 
   const handleCreateInstance = () => {

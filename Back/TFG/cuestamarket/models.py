@@ -30,11 +30,11 @@ class User(AbstractUser):
         """
         Save the user.
 
-        If the role is not set, the default role is 'client'.
+        If the role is not set, the default role is 'voter'.
         """
         if not self.role:
             try:
-                self.role = Role.objects.get(name='client')
+                self.role = Role.objects.get(name='voter')
             except Role.DoesNotExist:
                 Role.objects.create(name='client')
                 Role.objects.create(name='admin')
