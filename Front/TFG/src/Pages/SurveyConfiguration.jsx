@@ -6,15 +6,14 @@ import useParticipation from "../hooks/useParticipations";
 import { useParams } from "react-router-dom";
 import { useFlashRedirect } from "../hooks/useFlashRedirect";
 
-
 const SurveyConfiguration = () => {
   const { surveyId, instanceId } = useParams();
-  const { loadInstanceById } = useInstance();
+  const { loadInstanceById, closeExistingInstance } = useInstance();
   const { loadParticipations, removeParticipation, loadExportData } =
     useParticipation();
 
   const instance = useSelector((state) => state.instances.currentInstance);
-  const {navigateWithFlash} = useFlashRedirect();
+  const { navigateWithFlash } = useFlashRedirect();
   const questions = instance?.survey_questions || [];
   const loadingInstances = useSelector((state) => state.instances.loading);
   const loadingExport = useSelector((state) => state.participations.loading);
@@ -41,40 +40,54 @@ const SurveyConfiguration = () => {
 
   const participations = useSelector((state) => state.participations.items);
 
+  const handleDeleteParticipation = (participationId) => {
+    if (
+      window.confirm("¿Estás seguro de que deseas eliminar esta participación?")
+    ) {
+      removeParticipation(instanceId, participationId).then(() =>
+        loadParticipations(instanceId, {
+          page,
+          page_size: pageSize,
+        })
+      );
+      navigateWithFlash(
+        `/encuesta/${surveyId}/configuracion/${instanceId}`,
+        "Participación eliminada",
+        "error"
+      );
+    }
+  };
 
-const handleDeleteParticipation = (participationId) => {
-  if (window.confirm("¿Estás seguro de que deseas eliminar esta participación?")) {
-    removeParticipation(instanceId, participationId).then(() =>
-      loadParticipations(instanceId, {
-        page,
-        page_size: pageSize,
+  const handleCloseInstance = (instanceId) => {
+    closeExistingInstance(instanceId)
+      .then(() => {
+        navigateWithFlash(
+          `/encuesta/${surveyId}/lista`,
+          "La instancia fue eliminada correctamente.",
+          "success"
+        );
       })
-    );
-    navigateWithFlash(`/encuesta/${surveyId}/configuracion/${instanceId}`, "Participación eliminada", "error");
-  }
-};
+      .catch(() => {
+        navigateWithFlash(
+          `/encuesta/${surveyId}/configuracion/${instanceId}`,
+          "Error al eliminar la instancia.",
+          "error"
+        );
+      });
+  };
 
   return (
     <div className="container mt-4">
-      <h2>Configuración de Encuesta</h2>
-
-      <section className="mt-4">
-        <h4>Preguntas</h4>
-        <ul className="list-group">
-          {questions.map((q) => (
-            <li key={q.id} className="list-group-item">
-              <strong>{q.content}</strong>
-              {q.options?.length > 0 && (
-                <ul>
-                  {q.options.map((opt) => (
-                    <li key={opt.id}>{opt.content}</li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="d-flex justify-content-between align-items-center mt-4">
+        <h2>Configuración de Encuesta</h2>
+        <button
+          className="btn btn-outline-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#deleteInstanceModal"
+        >
+          Eliminar Instancia
+        </button>
+      </div>
 
       <section className="mt-5">
         <h4>Participaciones</h4>
@@ -139,12 +152,67 @@ const handleDeleteParticipation = (participationId) => {
         {loadingExport && <p>Cargando datos para exportar...</p>}
 
         {!loadingExport && exportData && instance && (
-          <ExportButton
-            exportData={exportData}
-            instance={instance}
-          />
+          <ExportButton exportData={exportData} instance={instance} />
         )}
       </section>
+
+      <section className="mt-4">
+        <h4>Preguntas</h4>
+        <ul className="list-group">
+          {questions.map((q) => (
+            <li key={q.id} className="list-group-item">
+              <strong>{q.content}</strong>
+              {q.options?.length > 0 && (
+                <ul>
+                  {q.options.map((opt) => (
+                    <li key={opt.id}>{opt.content}</li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+      <div
+  className="modal fade"
+  id="deleteInstanceModal"
+  tabIndex="-1"
+  aria-labelledby="deleteInstanceModalLabel"
+  aria-hidden="true"
+>
+  <div className="modal-dialog">
+    <div className="modal-content">
+      <div className="modal-header">
+        <h5 className="modal-title" id="deleteInstanceModalLabel">
+          Confirmar eliminación
+        </h5>
+        <button
+          type="button"
+          className="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      <div className="modal-body">
+        ¿Estás seguro de que deseas eliminar esta instancia? Esta acción no se puede deshacer.
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          className="btn btn-danger"
+          onClick={() => handleCloseInstance(instanceId)}
+          data-bs-dismiss="modal"
+        >
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
     </div>
   );
 };

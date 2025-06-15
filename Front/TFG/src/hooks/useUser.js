@@ -112,6 +112,7 @@ const useUser = () => {
   // Update user profile - simplified signature (no need for id)
   const updateUserProfile = async (data) => {
     try {
+      
       const result = await dispatch(updateUser(data)).unwrap();
       return result;
     } catch (error) {

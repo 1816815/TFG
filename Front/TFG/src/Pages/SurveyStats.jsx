@@ -92,51 +92,62 @@ export const SurveyStats = () => {
     }
   }, [instanceId]);
 
-  const processQuestionData = (question, data) => {
-    const counts = {};
-    let totalAnswers = 0;
-    const key = question.content;
+const processQuestionData = (question, data, totalParticipants) => {
+  const counts = {};
+  let totalAnswers = 0;
+  const key = question.content;
 
-    data.forEach((row) => {
-      let answer = row[key];
-      if (!answer) return;
+  data.forEach((row) => {
+    let answer = row[key];
+    if (!answer) return;
 
-      if (question.type === "multiple") {
-        const answersArray = answer.split(";").map((a) => a.trim());
-        answersArray.forEach((ans) => {
-          counts[ans] = (counts[ans] || 0) + 1;
-          totalAnswers++;
-        });
-      } else if (question.type === "single") {
-        counts[answer] = (counts[answer] || 0) + 1;
+    if (question.type === "multiple") {
+      const answersArray = answer.split(";").map((a) => a.trim());
+      answersArray.forEach((ans) => {
+        counts[ans] = (counts[ans] || 0) + 1;
         totalAnswers++;
-      } else if (["text", "open", "textarea"].includes(question.type)) {
-        if (answer.trim() !== "") {
-          counts["Respondidas"] = (counts["Respondidas"] || 0) + 1;
-          totalAnswers++;
-        }
+      });
+    } else if (question.type === "single") {
+      counts[answer] = (counts[answer] || 0) + 1;
+      totalAnswers++;
+    } else if (["text", "open", "textarea"].includes(question.type)) {
+      if (answer.trim() !== "" && answer !== "Sin respuesta de texto") {
+        counts["Respondidas"] = (counts["Respondidas"] || 0) + 1;
+        totalAnswers++;
       }
-    });
+    }
+  });
 
-    const options = Object.keys(counts);
+  if (["text", "open", "textarea"].includes(question.type) && totalParticipants) {
+    const responded = counts["Respondidas"] || 0;
+    const notResponded = totalParticipants - responded;
+    if (notResponded > 0) {
+      counts["No Respondidas"] = notResponded;
+    }
 
-    const pivoted = {
-      name: question.content,
-      ...counts,
-    };
+    totalAnswers = totalParticipants;
+  }
 
-    const flatData = options.map((option) => ({
-      option,
-      count: counts[option],
-    }));
+  const options = Object.keys(counts);
 
-    return {
-      chartData: [pivoted],
-      flatData,
-      options,
-      total: totalAnswers,
-    };
+  const pivoted = {
+    name: question.content,
+    ...counts,
   };
+
+  const flatData = options.map((option) => ({
+    option,
+    count: counts[option],
+    percentage: totalAnswers > 0 ? ((counts[option] / totalAnswers) * 100).toFixed(1) : 0,
+  }));
+
+  return {
+    chartData: [pivoted],
+    flatData,
+    options,
+    total: totalAnswers,
+  };
+};
 
   const generalStats = [
     {
@@ -429,7 +440,6 @@ export const SurveyStats = () => {
       </div>
 
       <div className="container-fluid py-4">
-        {/* Estadísticas Generales */}
         <div className="row g-4 mb-4">
           {generalStats.map((stat) => {
             const IconComponent = stat.icon;
@@ -501,11 +511,10 @@ export const SurveyStats = () => {
             </div>
           </div>
         )}
-        {/* Estadísticas por pregunta */}
         {questions.map((question) => {
           const questionData =
             Array.isArray(data) && data.length > 0
-              ? processQuestionData(question, data)
+              ? processQuestionData(question, data, total_responses)
               : { chartData: [], dataKey: "", total: 0 };
 
           const currentType = chartTypes[question.id] || "bar";

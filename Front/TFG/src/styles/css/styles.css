@@ -3,11 +3,17 @@ html,
 body,
 #root {
   height: 100%;
-  margin: 0;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   font-family: "Inter", sans-serif;
   background-color: #f7f7ff;
   color: #554640;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding-bottom: 3rem;
 }
 
 h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
@@ -130,7 +136,7 @@ button:active {
 }
 
 .footer {
-  margin-top: 5% !important;
+  margin-top: auto !important;
   width: 100%;
   padding: 1rem 0;
   background-color: #131112;
@@ -139,6 +145,76 @@ button:active {
 
 .footer a:hover {
   color: #a020f0 !important;
+}
+
+.home-welcome {
+  background: linear-gradient(90deg, #f7f7ff 60%, rgba(39, 154, 241, 0.08) 100%);
+  border-radius: 1.25rem;
+  box-shadow: 0 2px 16px rgba(39, 154, 241, 0.08);
+  padding: 2rem 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #cfe8fc;
+}
+
+.home-welcome h2, .home-welcome .h2 {
+  color: #a020f0;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.home-welcome .lead {
+  color: #554640;
+  font-size: 1.15rem;
+}
+
+.home-section {
+  background: #f7f7ff;
+  border: 1px solid #e7c7fb;
+  border-radius: 1rem;
+  box-shadow: 0 1px 8px rgba(160, 32, 240, 0.07);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  transition: box-shadow 0.2s;
+}
+
+.home-section a {
+  text-decoration: none;
+}
+
+.home-section h3, .home-section .h3,
+.home-section h4,
+.home-section .h4 {
+  color: #a020f0;
+  font-weight: 600;
+}
+
+.home-section strong {
+  color: #279af1;
+}
+
+.upgrade-btn {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-top: 1rem;
+  background: transparent;
+  color: #a020f0;
+  border: 2px solid #a020f0;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(160, 32, 240, 0.1);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  font-family: "Poppins", sans-serif;
+  text-decoration: none;
+}
+.upgrade-btn:hover, .upgrade-btn:focus {
+  background: #a020f0;
+  color: #f7f7ff;
+  border-color: #a020f0;
+  text-decoration: none;
+}
+
+.btn-secondary {
+  color: white !important;
 }
 
 :root,

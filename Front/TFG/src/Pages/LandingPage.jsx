@@ -1,6 +1,21 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate, Link } from "react-router-dom";
 
 const LandingPage = () => {
+
+  const user = useSelector((state) => state.user.user);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user?.role?.name === "voter") {
+      navigate("/home-voter");
+    }
+  }, [user, navigate]);
+
+  if (user?.role?.name === "voter") {
+    return null;
+  }
   return (
     <div className="landing-page bg-light text-dark">
  
@@ -15,7 +30,7 @@ const LandingPage = () => {
       </section>
 
       <section className="container py-5">
-        <h2 className="text-center mb-4">¿Qué puedes hacer con Cuestamarket?</h2>
+        <h2 className="text-center mb-4">¿Qué puedes hacer con CuestaMarket?</h2>
         <div className="row text-center">
           <div className="col-md-4 mb-4">
             <i className="bi bi-bar-chart-fill display-4 text-primary"></i>

@@ -24,6 +24,7 @@ import Layout from "./Layout";
 import LandingPage from "../Pages/LandingPage";
 import NotFound from "../components/NotFound";
 import { SurveyStats } from "../Pages/SurveyStats";
+import { HomeVoter } from "../Pages/HomeVoter";
 
 
 
@@ -77,6 +78,9 @@ const AppRoutes = () => {
          <Route path="/encuesta/:surveyId/configuracion/:instanceId" element={<SurveyConfiguration />} />
           <Route path="/encuesta/:surveyId/estadisticas/:instanceId" element={<SurveyStats />} />
          <Route path="/encuesta/:surveyId/instancia/:instanceId" element={<InstanceDetail />} />
+    </Route>
+    <Route element={<RoleProtectedRoute allowedRoles={["admin","voter"]} />}>
+    <Route path="/home-voter" element={<HomeVoter />} />
     </Route>
 
     <Route element={<RoleProtectedRoute allowedRoles={["admin", "client", "voter"]} />} >

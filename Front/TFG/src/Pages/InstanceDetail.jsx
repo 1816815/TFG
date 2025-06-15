@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import useInstance from "../hooks/useInstance";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 
 const InstanceDetail = () => {
-  const { instanceId } = useParams();
+  const { surveyId,instanceId } = useParams();
+  const {navigateWithFlash} = useFlashRedirect();
   const { loadInstanceById, updateExistingInstance } = useInstance();
   const [desiredState, setDesiredState] = useState("draft");
   const [closureDate, setClosureDate] = useState("");
@@ -64,7 +66,7 @@ const handleSubmit = async (e) => {
     const resultAction = await updateExistingInstance(instanceId, payload);
 
     if (resultAction?.type?.endsWith("/fulfilled")) {
-      setMessage("Instancia actualizada correctamente.");
+      navigateWithFlash(`/encuesta/${surveyId}/lista`, "Instancia actualizada correctamente.", "success");
     } else if (resultAction?.type?.endsWith("/rejected")) {
       setMessage(resultAction.payload || "Error al actualizar la instancia.");
     } else {
@@ -84,23 +86,7 @@ const handleSubmit = async (e) => {
     <div className="container mt-4">
       <h2>Detalle de Instancia</h2>
 
-      <section className="mt-4">
-        <h4>Preguntas</h4>
-        <ul className="list-group">
-          {questions.map((q) => (
-            <li key={q.id} className="list-group-item">
-              <strong>{q.content}</strong>
-              {q.options?.length > 0 && (
-                <ul>
-                  {q.options.map((opt) => (
-                    <li key={opt.id}>{opt.content}</li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+
       <div className="card mt-3">
         <div className="card-body">
           <h5 className="card-title">{instance.survey?.title}</h5>
@@ -145,9 +131,15 @@ const handleSubmit = async (e) => {
                 id="closure_date"
                 className="form-control"
                 min={getTomorrowMinDateTime()}
+                max={new Date(
+                  new Date().setFullYear(new Date().getFullYear() + 1)
+                )
+                  .toISOString()
+                  .slice(0, 16)}
                 value={closureDate}
                 onChange={(e) => setClosureDate(e.target.value)}
                 disabled={loading}
+                required
               />
             </div>
           )}
@@ -163,6 +155,24 @@ const handleSubmit = async (e) => {
           {message && <div className="alert alert-info mt-3">{message}</div>}
         </div>
       </div>
+
+            <section className="mt-4">
+        <h4>Preguntas</h4>
+        <ul className="list-group">
+          {questions.map((q) => (
+            <li key={q.id} className="list-group-item">
+              <strong>{q.content}</strong>
+              {q.options?.length > 0 && (
+                <ul>
+                  {q.options.map((opt) => (
+                    <li key={opt.id}>{opt.content}</li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 };

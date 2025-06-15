@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { clearFlashMessage } from "../Redux/slices/messageSlice";
+import {  Send, AlertCircle, CheckCircle } from 'lucide-react';
 
 const alertTypeClasses = {
   success: "alert alert-success",

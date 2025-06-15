@@ -82,6 +82,7 @@ export const userService = {
   },
 
   async updateProfile(data) {
+    
     return await apiClient.put('/users/my-profile', data);
   },
   async getAll() {

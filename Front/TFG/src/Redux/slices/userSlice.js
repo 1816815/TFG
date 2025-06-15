@@ -49,7 +49,6 @@ export const updateUser = createAsyncThunk(
       if (!token) {
         throw new Error("No token available");
       }
-      
       return await userService.updateProfile(data);
     } catch (error) {
       return rejectWithValue(error);

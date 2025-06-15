@@ -34,7 +34,7 @@ export const instanceService = {
   },
 
   async close(id) {
-    return await apiClient.post(`/survey-instances/${id}/close/`, {
+    return await apiClient.delete(`/survey-instances/${id}/`, {
       credentials: "include",
     });
   },

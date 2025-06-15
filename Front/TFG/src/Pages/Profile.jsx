@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import useUser from "../hooks/useUser";
 import ChangePassword from "./ChangePassword";
+import { useFlashRedirect } from "../hooks/useFlashRedirect";
 
 const Profile = () => {
   const { user, updateUserProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [message, setMessage] = useState("");
+  const {navigateWithFlash} = useFlashRedirect();
 
   const {
     register,
@@ -43,10 +45,12 @@ const Profile = () => {
     const result = await updateUserProfile(data);
     if (result) {
       setIsEditing(false);
-      setMessage("Perfil actualizado correctamente");
-      setTimeout(() => setMessage(""), 3000);
+
+      navigateWithFlash("/profile", "Perfil actualizado correctamente", "success");
+      
     } else {
-      setMessage("Error al actualizar el perfil");
+
+      navigateWithFlash("/profile", "Error al actualizar el perfil", "error");
     }
   };
 

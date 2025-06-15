@@ -161,7 +161,6 @@ function AdminPanel() {
         });
       });
 
-      // También puedes poner un error general si quieres:
       setError("root", {
         type: "server",
         message: "Ocurrieron errores al guardar el usuario.",

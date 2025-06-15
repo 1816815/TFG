@@ -56,8 +56,6 @@ const AnswerForm = () => {
       getPublicSurvey(instanceId);
     }
   }, [instanceId]);
-  console.log("Antes del current");
-  console.log(currentParticipation?.answers);
 
   // Cargar participación existente del usuario cuando se carga la encuesta
   useEffect(() => {
@@ -66,7 +64,6 @@ const AnswerForm = () => {
         try {
           await loadParticipationResults(userStatus.participation_id);
           setParticipationLoaded(true);
-          console.log("Participación cargada");
         } catch (error) {
           console.error("Error cargando participación:", error);
         }
@@ -163,10 +160,6 @@ const AnswerForm = () => {
     const formattedAnswers = formatAnswersForSubmit(questions);
 
     try {
-      console.log(
-        "Enviando respuestas al backend:",
-        JSON.stringify(formattedAnswers, null, 2)
-      );
 
       submitSurvey(instanceId, { answers: formattedAnswers, completed: true });
       setLastSubmitWasFinal(true);
