@@ -16,12 +16,25 @@ const Profile = () => {
     formState: { errors },
   } = useForm();
 
+  const formatRole = (role) => {
+    switch (role) {
+      case "admin":
+        return "Administrador";
+      case "client":
+        return "Cliente";
+      case "voter":
+        return "Votante";
+      default:
+        return "Desconocido";
+    }
+  };
+
   useEffect(() => {
     if (user) {
       reset({
         username: user.username || "",
         email: user.email || "",
-        role: user.role?.name || "",
+        role: formatRole(user.role?.name) || "",
       });
     }
   }, [user, reset]);
@@ -37,7 +50,10 @@ const Profile = () => {
     }
   };
 
-  if (!user) return <div className="alert alert-danger">No se pudo cargar el perfil</div>;
+  if (!user)
+    return (
+      <div className="alert alert-danger">No se pudo cargar el perfil</div>
+    );
 
   return (
     <div className="container mt-4">
@@ -45,7 +61,10 @@ const Profile = () => {
         <div className="card-header d-flex justify-content-between align-items-center">
           <h4 className="mb-0">Mi Perfil</h4>
           {!isEditing && (
-            <button className="btn btn-outline-primary btn-sm" onClick={() => setIsEditing(true)}>
+            <button
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => setIsEditing(true)}
+            >
               Editar Perfil
             </button>
           )}
@@ -56,19 +75,29 @@ const Profile = () => {
 
           {!isEditing ? (
             <>
-              <p><strong>Usuario:</strong> {user.username}</p>
-              <p><strong>Email:</strong> {user.email}</p>
-              <p><strong>Rol:</strong> {user.role?.name || "Sin especificar"}</p>
+              <p>
+                <strong>Usuario:</strong> {user.username}
+              </p>
+              <p>
+                <strong>Email:</strong> {user.email}
+              </p>
+              <p>
+                <strong>Rol:</strong> {user.role?.name || "Sin especificar"}
+              </p>
             </>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="mb-3">
                 <label className="form-label">Usuario</label>
                 <input
-                  {...register("username", { required: "Usuario es obligatorio" })}
+                  {...register("username", {
+                    required: "Usuario es obligatorio",
+                  })}
                   className="form-control"
                 />
-                {errors.username && <div className="text-danger">{errors.username.message}</div>}
+                {errors.username && (
+                  <div className="text-danger">{errors.username.message}</div>
+                )}
               </div>
 
               <div className="mb-3">
@@ -81,12 +110,20 @@ const Profile = () => {
                   })}
                   className="form-control"
                 />
-                {errors.email && <div className="text-danger">{errors.email.message}</div>}
+                {errors.email && (
+                  <div className="text-danger">{errors.email.message}</div>
+                )}
               </div>
 
               <div className="d-flex gap-2">
-                <button type="submit" className="btn btn-success">Guardar Cambios</button>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsEditing(false)}>
+                <button type="submit" className="btn btn-success">
+                  Guardar Cambios
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setIsEditing(false)}
+                >
                   Cancelar
                 </button>
               </div>
@@ -99,7 +136,9 @@ const Profile = () => {
             className="btn btn-outline-dark"
             onClick={() => setShowPasswordForm(!showPasswordForm)}
           >
-            {showPasswordForm ? "Ocultar Cambio de Contraseña" : "Cambiar Contraseña"}
+            {showPasswordForm
+              ? "Ocultar Cambio de Contraseña"
+              : "Cambiar Contraseña"}
           </button>
 
           {showPasswordForm && (

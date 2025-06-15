@@ -120,13 +120,11 @@ export const SurveyStats = () => {
 
     const options = Object.keys(counts);
 
-    // Para barras y pie: un solo objeto con keys de opciones
     const pivoted = {
       name: question.content,
       ...counts,
     };
 
-    // Para línea y área: array con cada opción como punto con valor
     const flatData = options.map((option) => ({
       option,
       count: counts[option],
@@ -166,12 +164,12 @@ export const SurveyStats = () => {
       description: "Participaciones completas",
     },
     {
-      name: "Días Activos",
+      name: "Intervalo",
       value: days_active || 0,
       icon: Calendar,
       color: "warning",
       bgColor: "bg-warning",
-      description: "Días desde creación",
+      description: "Días que se procesará la encuesta",
     },
   ];
 
@@ -181,7 +179,7 @@ export const SurveyStats = () => {
     Object.values(participations || {}).forEach((p) => {
       if (p.date) {
         const dateObj = new Date(p.date);
-        const dateKey = dateObj.toISOString().split("T")[0]; // yyyy-mm-dd
+        const dateKey = dateObj.toISOString().split("T")[0];
 
         if (!map[dateKey]) {
           map[dateKey] = { respuestas: 0, completadas: 0 };
@@ -415,7 +413,7 @@ export const SurveyStats = () => {
               </h1>
               <p className="text-muted mb-0">
                 <Calendar size={16} className="me-2" />
-                Datos exportados:{" "}
+                Datos a fecha de:{" "}
                 {export_date
                   ? new Date(export_date).toLocaleDateString("es-ES")
                   : "N/A"}
