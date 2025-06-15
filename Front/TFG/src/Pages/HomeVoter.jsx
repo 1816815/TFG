@@ -34,7 +34,7 @@ const handleSubmit = async () => {
 
   const updatedUser = {
     ...user,
-    role_id: 2,
+    role_id: 1,
   };
 
   console.log("Datos enviados para update:", updatedUser);
