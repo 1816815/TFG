@@ -296,19 +296,19 @@ const copyLink = () => {
         </div>
       </div>
       {/* Toast para copiar enlace */}
-      <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+      <div className="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
         <div
           id="copyToast"
-          class="toast align-items-center text-bg-success border-0"
+          className="toast align-items-center text-bg-success border-0"
           role="alert"
           aria-live="assertive"
           aria-atomic="true"
         >
           <div class="d-flex">
-            <div class="toast-body">¡Enlace copiado al portapapeles!</div>
+            <div className="toast-body">¡Enlace copiado al portapapeles!</div>
             <button
               type="button"
-              class="btn-close btn-close-white me-2 m-auto"
+              className="btn-close btn-close-white me-2 m-auto"
               data-bs-dismiss="toast"
               aria-label="Cerrar"
             ></button>
