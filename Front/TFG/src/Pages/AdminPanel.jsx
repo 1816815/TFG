@@ -443,48 +443,68 @@ function AdminPanel() {
       </ul>
 
       {showConfirmModal && userToToggle && (
-        <div className="modal show d-block" tabIndex="-1">
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {userToToggle.is_active ? "Desactivar" : "Activar"} Usuario
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowConfirmModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <p>
-                  ¿Estás seguro de querer{" "}
-                  <strong>
-                    {userToToggle.is_active ? "desactivar" : "activar"}
-                  </strong>{" "}
-                  al usuario <strong>{userToToggle.username}</strong>?
-                </p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowConfirmModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={confirmToggleUser}
-                >
-                  Confirmar
-                </button>
-              </div>
-            </div>
+  <>
+    {/* Backdrop */}
+    <div
+      className="modal-backdrop fade show"
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        zIndex: 1040,
+      }}
+      onClick={() => setShowConfirmModal(false)}
+    />
+
+    {/* Modal */}
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      style={{ zIndex: 1050, position: "fixed", inset: 0, overflowY: "auto" }}
+    >
+      <div className="modal-dialog" style={{ marginTop: "10vh" }}>
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">
+              {userToToggle.is_active ? "Desactivar" : "Activar"} Usuario
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowConfirmModal(false)}
+            ></button>
+          </div>
+          <div className="modal-body">
+            <p>
+              ¿Estás seguro de querer{" "}
+              <strong>
+                {userToToggle.is_active ? "desactivar" : "activar"}
+              </strong>{" "}
+              al usuario <strong>{userToToggle.username}</strong>?
+            </p>
+          </div>
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowConfirmModal(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={confirmToggleUser}
+            >
+              Confirmar
+            </button>
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  </>
+)}
+
     </div>
   );
 }
