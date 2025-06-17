@@ -304,7 +304,7 @@ const copyLink = () => {
           aria-live="assertive"
           aria-atomic="true"
         >
-          <div class="d-flex">
+          <div className="d-flex">
             <div className="toast-body">¡Enlace copiado al portapapeles!</div>
             <button
               type="button"
