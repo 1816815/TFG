@@ -13,6 +13,8 @@ function AdminPanel() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [userToToggle, setUserToToggle] = useState(null);
 
   const users = useSelector((state) => state.user.users);
   let error = "";
@@ -90,21 +92,23 @@ function AdminPanel() {
     setError(null);
   };
 
-  const handleToggleActive = async (user) => {
-    const action = user.is_active ? "deactivate" : "activate";
-    if (
-      !window.confirm(
-        `¿Estás seguro de ${
-          user.is_active ? "desactivar" : "activar"
-        } este usuario?`
-      )
-    )
-      return;
+  const handleToggleActive = (user) => {
+    setUserToToggle(user);
+    setShowConfirmModal(true);
+  };
+
+  const confirmToggleUser = async () => {
+    if (!userToToggle) return;
+
+    const action = userToToggle.is_active ? "deactivate" : "activate";
     try {
-      await adminToggle(user.id, action);
+      await adminToggle(userToToggle.id, action);
       getAllUsers();
     } catch (err) {
       setError(`Error al ${action} usuario: ${err.message}`);
+    } finally {
+      setShowConfirmModal(false);
+      setUserToToggle(null);
     }
   };
 
@@ -437,6 +441,50 @@ function AdminPanel() {
           ))
         )}
       </ul>
+
+      {showConfirmModal && userToToggle && (
+        <div className="modal show d-block" tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  {userToToggle.is_active ? "Desactivar" : "Activar"} Usuario
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowConfirmModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>
+                  ¿Estás seguro de querer{" "}
+                  <strong>
+                    {userToToggle.is_active ? "desactivar" : "activar"}
+                  </strong>{" "}
+                  al usuario <strong>{userToToggle.username}</strong>?
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={confirmToggleUser}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
