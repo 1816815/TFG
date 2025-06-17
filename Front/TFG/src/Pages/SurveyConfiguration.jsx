@@ -296,7 +296,7 @@ const copyLink = () => {
         </div>
       </div>
       {/* Toast para copiar enlace */}
-      <div className="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+      <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 11 }}>
         <div
           id="copyToast"
           className="toast align-items-center text-bg-success border-0"
