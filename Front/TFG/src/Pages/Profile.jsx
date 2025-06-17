@@ -15,6 +15,8 @@ const Profile = () => {
     register,
     handleSubmit,
     reset,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm();
 
@@ -41,18 +43,37 @@ const Profile = () => {
     }
   }, [user, reset]);
 
-  const onSubmit = async (data) => {
+const onSubmit = async (data) => {
+  // Limpiar todos los errores previos
+  clearErrors();
+
+  try {
     const result = await updateUserProfile(data);
-    if (result) {
-      setIsEditing(false);
-
-      navigateWithFlash("/profile", "Perfil actualizado correctamente", "success");
-      
+    
+    // Si llegamos aquí sin excepción, es éxito
+    setIsEditing(false);
+    navigateWithFlash("/profile", "Perfil actualizado correctamente", "success");
+    
+  } catch (error) {
+    // Si updateUserProfile lanza una excepción con los errores del servidor
+    const serverErrors = error?.response?.data || error?.data || error;
+    
+    if (serverErrors && typeof serverErrors === 'object') {
+      // Poner errores específicos de campo
+      Object.entries(serverErrors).forEach(([field, messages]) => {
+        setError(field, {
+          type: "server",
+          message: Array.isArray(messages) ? messages.join(", ") : messages,
+        });
+      });
     } else {
-
-      navigateWithFlash("/profile", "Error al actualizar el perfil", "error");
+      setError("root", {
+        type: "server",
+        message: "Error inesperado.",
+      });
     }
-  };
+  } 
+};
 
   if (!user)
     return (
@@ -119,6 +140,8 @@ const Profile = () => {
                 )}
               </div>
 
+              {/* No mostrar error general del servidor cuando hay errores de campo específicos */}
+
               <div className="d-flex gap-2">
                 <button type="submit" className="btn btn-success">
                   Guardar Cambios
@@ -126,7 +149,10 @@ const Profile = () => {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    setIsEditing(false);
+                    clearErrors(); // Limpiar errores al cancelar
+                  }}
                 >
                   Cancelar
                 </button>

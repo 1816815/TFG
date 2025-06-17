@@ -10,6 +10,10 @@ const LandingPage = () => {
   useEffect(() => {
     if (user?.role?.name === "voter") {
       navigate("/home-voter");
+    } else if (user?.role?.name === "client") {
+      navigate("/home-client");
+    } else if (user?.role?.name === "admin") {
+      navigate("/home-admin");
     }
   }, [user, navigate]);
 

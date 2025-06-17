@@ -11,23 +11,24 @@ export const HomeVoter = () => {
   const [showModal, setShowModal] = useState(false);
   const modalRef = useRef(null);
 
-  useEffect(() => {
-    if (showModal) {
-      const modalElement = modalRef.current;
-      const modal = new window.bootstrap.Modal(modalElement);
-      modal.show();
+ useEffect(() => {
+  if (showModal) {
+    const modalElement = modalRef.current;
+    const modal = new window.bootstrap.Modal(modalElement);
+    modal.show();
 
-      modalElement.addEventListener("hidden.bs.modal", () => {
-        setShowModal(false);
-      });
+    const handleModalHidden = () => {
+      setShowModal(false);
+    };
 
-      return () => {
-        modalElement.removeEventListener("hidden.bs.modal", () => {
-          setShowModal(false);
-        });
-      };
-    }
-  }, [showModal]);
+    modalElement.addEventListener("hidden.bs.modal", handleModalHidden);
+
+    return () => {
+      modalElement.removeEventListener("hidden.bs.modal", handleModalHidden);
+    };
+  }
+}, [showModal]);
+
 
 const handleSubmit = async () => {
   if (!user) return;
@@ -37,29 +38,50 @@ const handleSubmit = async () => {
     role_id: 1,
   };
 
-  console.log("Datos enviados para update:", updatedUser);
-  const result = await updateUserProfile(updatedUser);
+  try {
+    const result = await updateUserProfile(updatedUser);
 
-  if (!result) {
+    // Cierra el modal manualmente
+    const modalElement = modalRef.current;
+    const modal = window.bootstrap.Modal.getInstance(modalElement);
+    if (modal) modal.hide();
+
+    // Espera un pequeño delay (el tiempo que Bootstrap necesita para cerrar)
+    setTimeout(() => {
+      // Limpieza manual del backdrop
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach((backdrop) => backdrop.remove());
+
+      document.body.classList.remove('modal-open');
+      document.body.style = ''; // limpia estilos en línea
+
+      if (!result) {
+        navigateWithFlash("/profile", "Error al actualizar el rol", "error");
+      } else {
+        navigateWithFlash(
+          "/profile",
+          "Rol actualizado correctamente",
+          "success"
+        );
+      }
+    }, 300); // tiempo típico de animación en Bootstrap
+  } catch (error) {
+    console.error("Error al actualizar el usuario:", error);
     navigateWithFlash("/profile", "Error al actualizar el rol", "error");
-  } else {
-    navigateWithFlash("/profile", "Rol actualizado correctamente", "success");
   }
-
-  const modalElement = modalRef.current;
-  const modal = window.bootstrap.Modal.getInstance(modalElement);
-  if (modal) modal.hide();
 };
+
 
 
   return (
     <div className="container py-4">
       <div className="home-welcome mb-4">
         <h2>
-          Bienvenido, <span>{user && user.username}</span>
+          Bienvenido/a, <span>{user && user.username}</span>
         </h2>
         <p className="lead mb-0">
-          ¡Nos alegra tenerte aquí! Participa y haz oír tu voz en nuestras encuestas.
+          ¡Nos alegra tenerte aquí! Participa y haz oír tu voz en nuestras
+          encuestas.
         </p>
       </div>
 
@@ -107,7 +129,8 @@ const handleSubmit = async () => {
                 className="btn-close"
                 onClick={() => {
                   const modalElement = modalRef.current;
-                  const modal = window.bootstrap.Modal.getInstance(modalElement);
+                  const modal =
+                    window.bootstrap.Modal.getInstance(modalElement);
                   if (modal) modal.hide();
                 }}
                 aria-label="Cerrar"
@@ -122,7 +145,8 @@ const handleSubmit = async () => {
                 className="btn btn-secondary"
                 onClick={() => {
                   const modalElement = modalRef.current;
-                  const modal = window.bootstrap.Modal.getInstance(modalElement);
+                  const modal =
+                    window.bootstrap.Modal.getInstance(modalElement);
                   if (modal) modal.hide();
                 }}
               >
@@ -142,3 +166,5 @@ const handleSubmit = async () => {
     </div>
   );
 };
+
+export default HomeVoter;

@@ -256,6 +256,10 @@ button {
   }
 }
 
+.accordion-button:hover {
+  color: $ghost-white;
+}
+
 .btn-secondary{
   color: white !important;
 }

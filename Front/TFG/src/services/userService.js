@@ -14,10 +14,8 @@ const getTokenFromStorage = () => {
 const setTokenInStorage = (token) => {
   try {
     if (token) {
-      console.log("Guardando token en localStorage:", typeof token === 'string' ? token.substring(0, 20) + "..." : token);
       localStorage.setItem('accessToken', token);
     } else {
-      console.log("Eliminando token del localStorage - token recibido:", token);
       localStorage.removeItem('accessToken');
     }
   } catch (error) {
@@ -142,7 +140,6 @@ async initializeAuth() {
     
     // If no token or invalid token, try to refresh
     if (!storedToken || !isTokenValid(storedToken)) {
-      console.log("Token inválido o inexistente, intentando refresh...");
       
       try {
         const newToken = await this.refreshToken();
@@ -152,7 +149,6 @@ async initializeAuth() {
           accessToken: newToken 
         };
       } catch (error) {
-        console.warn("No se pudo refrescar el token:", error);
         clearAuthStorage();
         return { initialized: true, authenticated: false };
       }

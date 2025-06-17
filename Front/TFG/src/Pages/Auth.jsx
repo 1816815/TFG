@@ -19,7 +19,7 @@ const Auth = () => {
     handleSubmit,
     reset,
     setError,
-    formState: { errors }
+    formState: { errors },
   } = useForm();
 
   useEffect(() => {
@@ -35,13 +35,18 @@ const Auth = () => {
         } catch (error) {
           setError("password", {
             type: "validation",
-            message: error.message || "La contraseña no cumple con los requisitos.",
+            message:
+              error.message || "La contraseña no cumple con los requisitos.",
           });
           return;
         }
 
         await registerUser(data);
-        navigateWithFlash("/", "Se ha enviado un correo para confirmar el registro.", "info");
+        navigateWithFlash(
+          "/",
+          "Se ha enviado un correo para confirmar el registro.",
+          "info"
+        );
       } else if (isLoginMode) {
         await login(data);
         navigateWithFlash("/", "Sesión iniciada con éxito.", "success");
@@ -81,7 +86,10 @@ const Auth = () => {
 
   return (
     <div className="container d-flex align-items-center justify-content-center min-vh-100">
-      <div className="card shadow-sm" style={{ width: "100%", maxWidth: "400px" }}>
+      <div
+        className="card shadow-sm"
+        style={{ width: "100%", maxWidth: "400px" }}
+      >
         <div className="card-body">
           <h2 className="card-title text-center mb-4">
             {isRegisterMode ? "Registro" : "Iniciar sesión"}
@@ -92,11 +100,19 @@ const Auth = () => {
               <label className="form-label">Usuario</label>
               <input
                 type="text"
-                className={`form-control ${errors.username ? "is-invalid" : ""}`}
+                className={`form-control ${
+                  errors.username ? "is-invalid" : ""
+                }`}
                 placeholder="Nombre de usuario"
-                {...register("username", { required: "El usuario es obligatorio" })}
+                {...register("username", {
+                  required: "El usuario es obligatorio",
+                })}
               />
-              {errors.username && <div className="invalid-feedback">{errors.username.message}</div>}
+              {errors.username && (
+                <div className="invalid-feedback">
+                  {errors.username.message}
+                </div>
+              )}
             </div>
 
             {isRegisterMode && (
@@ -108,10 +124,15 @@ const Auth = () => {
                   placeholder="Correo electrónico"
                   {...register("email", {
                     required: "El correo es obligatorio",
-                    pattern: { value: /^\S+@\S+$/i, message: "Correo inválido" },
+                    pattern: {
+                      value: /^\S+@\S+$/i,
+                      message: "Correo inválido",
+                    },
                   })}
                 />
-                {errors.email && <div className="invalid-feedback">{errors.email.message}</div>}
+                {errors.email && (
+                  <div className="invalid-feedback">{errors.email.message}</div>
+                )}
               </div>
             )}
 
@@ -119,12 +140,22 @@ const Auth = () => {
               <label className="form-label">Contraseña</label>
               <input
                 type="password"
-                className={`form-control ${errors.password ? "is-invalid" : ""}`}
+                className={`form-control ${
+                  errors.password ? "is-invalid" : ""
+                }`}
                 placeholder="Contraseña"
-                {...register("password", { required: "La contraseña es obligatoria" })}
-                autoComplete={isRegisterMode ? "new-password" : "current-password"}
+                {...register("password", {
+                  required: "La contraseña es obligatoria",
+                })}
+                autoComplete={
+                  isRegisterMode ? "new-password" : "current-password"
+                }
               />
-              {errors.password && <div className="invalid-feedback">{errors.password.message}</div>}
+              {errors.password && (
+                <div className="invalid-feedback">
+                  {errors.password.message}
+                </div>
+              )}
             </div>
 
             <button type="submit" className="btn btn-primary w-100">
@@ -132,12 +163,12 @@ const Auth = () => {
             </button>
 
             {errors.root && (
-              <div className="alert alert-danger mt-3">{errors.root.message}</div>
+              <div className="alert alert-danger mt-3">
+                {errors.root.message}
+              </div>
             )}
 
-            {message && (
-              <div className="alert alert-info mt-3">{message}</div>
-            )}
+            {message && <div className="alert alert-info mt-3">{message}</div>}
           </form>
 
           <div className="text-center mt-3">
@@ -152,6 +183,17 @@ const Auth = () => {
                 {isRegisterMode ? "Inicia sesión" : "Regístrate"}
               </span>
             </span>
+
+            {isLoginMode && (
+              <div className="mt-2">
+                <a
+                  href="/forgot-password"
+                  className="text-decoration-none text-primary"
+                >
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

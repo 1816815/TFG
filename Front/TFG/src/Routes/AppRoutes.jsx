@@ -1,6 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import ChartDemo from "../components/Chart";
-import Crono from "../components/Crono";
 import Auth from "../Pages/Auth";
 import AdminPanel from "../Pages/AdminPanel";
 import Profile from "../Pages/Profile";
@@ -24,17 +22,15 @@ import Layout from "./Layout";
 import LandingPage from "../Pages/LandingPage";
 import NotFound from "../components/NotFound";
 import { SurveyStats } from "../Pages/SurveyStats";
-import { HomeVoter } from "../Pages/HomeVoter";
-
-
+import HomeVoter from "../Pages/HomeVoter";
+import HomeClient from "../Pages/HomeClient";
+import HomeAdmin from "../Pages/HomeAdmin";
 
 /**
  * Component that defines the routes for the application.
  *
  * The routes are as follows:
  *
- * - `/`: Chart demo
- * - `/crono`: Crono
  * - `/login`: Login page
  * - `/register`: Register page
  * - `/logout`: Logout page
@@ -53,7 +49,6 @@ const AppRoutes = () => {
     <Routes>
       <Route element={<Layout />}>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/crono" element={<Crono />} />
       <Route path="/login" element={<Auth />} />
       <Route path="/register" element={<Auth />} />
        <Route path="/logout" element={<Logout />} />
@@ -65,6 +60,7 @@ const AppRoutes = () => {
 
 
       <Route element={<RoleProtectedRoute allowedRoles={["admin"]} />}>
+        <Route path="/home-admin" element={<HomeAdmin />} />
         <Route path="/admin" element={<AdminPanel />} />
       </Route>
 
@@ -78,7 +74,9 @@ const AppRoutes = () => {
          <Route path="/encuesta/:surveyId/configuracion/:instanceId" element={<SurveyConfiguration />} />
           <Route path="/encuesta/:surveyId/estadisticas/:instanceId" element={<SurveyStats />} />
          <Route path="/encuesta/:surveyId/instancia/:instanceId" element={<InstanceDetail />} />
+         <Route path="/home-client" element={<HomeClient />} />
     </Route>
+
     <Route element={<RoleProtectedRoute allowedRoles={["admin","voter"]} />}>
     <Route path="/home-voter" element={<HomeVoter />} />
     </Route>

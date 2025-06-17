@@ -36,7 +36,6 @@ const AppInitializer = ({ children }) => {
         }
       }
     } catch (err) {
-      console.error("Fallo al cargar perfil:", err.message);
       await refreshTokenFlow();
     }
   }
@@ -52,7 +51,6 @@ const AppInitializer = ({ children }) => {
         console.warn("No se recibió un nuevo accessToken");
       }
     } catch (error) {
-      console.error("Error al refrescar token:", error.message);
       localStorage.removeItem("isLoggedIn");
     }
   }

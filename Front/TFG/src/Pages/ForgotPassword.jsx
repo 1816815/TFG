@@ -52,7 +52,7 @@ const ForgotPassword = () => {
             type="email"
             id="email"
             className={`form-control ${errors.email ? "is-invalid" : ""}`}
-            placeholder="Correo electrónico"
+            placeholder="micorreo@email.es"
             {...register("email", { required: "El correo es obligatorio" })}
           />
           {errors.email && (

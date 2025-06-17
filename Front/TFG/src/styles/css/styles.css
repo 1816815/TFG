@@ -213,6 +213,10 @@ button:active {
   text-decoration: none;
 }
 
+.accordion-button:hover {
+  color: #f7f7ff;
+}
+
 .btn-secondary {
   color: white !important;
 }

@@ -20,6 +20,9 @@ const SurveyConfiguration = () => {
   const error = useSelector((state) => state.instances.error);
   const exportData = useSelector((state) => state.participations.exportData);
 
+  // Estado para el modal de confirmación de eliminación de participación
+  const [participationToDelete, setParticipationToDelete] = useState(null);
+
   useEffect(() => {
     if (instanceId) {
       loadInstanceById(instanceId);
@@ -41,10 +44,12 @@ const SurveyConfiguration = () => {
   const participations = useSelector((state) => state.participations.items);
 
   const handleDeleteParticipation = (participationId) => {
-    if (
-      window.confirm("¿Estás seguro de que deseas eliminar esta participación?")
-    ) {
-      removeParticipation(instanceId, participationId).then(() =>
+    setParticipationToDelete(participationId);
+  };
+
+  const confirmDeleteParticipation = () => {
+    if (participationToDelete) {
+      removeParticipation(instanceId, participationToDelete).then(() =>
         loadParticipations(instanceId, {
           page,
           page_size: pageSize,
@@ -55,6 +60,7 @@ const SurveyConfiguration = () => {
         "Participación eliminada",
         "error"
       );
+      setParticipationToDelete(null);
     }
   };
 
@@ -116,6 +122,8 @@ const SurveyConfiguration = () => {
                       <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDeleteParticipation(p.id)}
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteParticipationModal"
                       >
                         Eliminar
                       </button>
@@ -173,46 +181,93 @@ const SurveyConfiguration = () => {
           ))}
         </ul>
       </section>
-      <div
-  className="modal fade"
-  id="deleteInstanceModal"
-  tabIndex="-1"
-  aria-labelledby="deleteInstanceModalLabel"
-  aria-hidden="true"
->
-  <div className="modal-dialog">
-    <div className="modal-content">
-      <div className="modal-header">
-        <h5 className="modal-title" id="deleteInstanceModalLabel">
-          Confirmar eliminación
-        </h5>
-        <button
-          type="button"
-          className="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Cerrar"
-        ></button>
-      </div>
-      <div className="modal-body">
-        ¿Estás seguro de que deseas eliminar esta instancia? Esta acción no se puede deshacer.
-      </div>
-      <div className="modal-footer">
-        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-          Cancelar
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger"
-          onClick={() => handleCloseInstance(instanceId)}
-          data-bs-dismiss="modal"
-        >
-          Eliminar
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
+      {/* Modal para eliminar instancia */}
+      <div
+        className="modal fade"
+        id="deleteInstanceModal"
+        tabIndex="-1"
+        aria-labelledby="deleteInstanceModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="deleteInstanceModalLabel">
+                Confirmar eliminación
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Cerrar"
+              ></button>
+            </div>
+            <div className="modal-body">
+              ¿Estás seguro de que deseas eliminar esta instancia? Esta acción no se puede deshacer.
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => handleCloseInstance(instanceId)}
+                data-bs-dismiss="modal"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal para eliminar participación */}
+      <div
+        className="modal fade"
+        id="deleteParticipationModal"
+        tabIndex="-1"
+        aria-labelledby="deleteParticipationModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="deleteParticipationModalLabel">
+                Confirmar eliminación
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Cerrar"
+              ></button>
+            </div>
+            <div className="modal-body">
+              ¿Estás seguro de que deseas eliminar esta participación? Esta acción no se puede deshacer.
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                data-bs-dismiss="modal"
+                onClick={() => setParticipationToDelete(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={confirmDeleteParticipation}
+                data-bs-dismiss="modal"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
