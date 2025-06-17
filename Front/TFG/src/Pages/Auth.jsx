@@ -88,7 +88,7 @@ const Auth = () => {
     <div className="container d-flex align-items-center justify-content-center min-vh-100">
       <div
         className="card shadow-sm"
-        style={{ width: "100%", maxWidth: "400px" }}
+        style={{ width: "100%", maxWidth: "400px",  transform: "translateY(-50px)"}}
       >
         <div className="card-body">
           <h2 className="card-title text-center mb-4">

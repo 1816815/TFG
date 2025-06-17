@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import ExportButton from "../components/ExportButton";
 import useInstance from "../hooks/useInstance";
@@ -19,6 +19,8 @@ const SurveyConfiguration = () => {
   const loadingExport = useSelector((state) => state.participations.loading);
   const error = useSelector((state) => state.instances.error);
   const exportData = useSelector((state) => state.participations.exportData);
+  const toastRef = useRef(null);
+
 
   // Estado para el modal de confirmación de eliminación de participación
   const [participationToDelete, setParticipationToDelete] = useState(null);
@@ -82,19 +84,20 @@ const SurveyConfiguration = () => {
       });
   };
 
-const copyLink = () => {
-  const link = `https://cuestamarket.duckdns.org/encuestas/${instanceId}/responder`;
+  const copyLink = () => {
+    const link = `https://cuestamarket.duckdns.org/encuestas/${instanceId}/responder`;
 
-  navigator.clipboard.writeText(link)
-    .then(() => {
-      const toastEl = document.getElementById('copyToast');
-      const toast = new bootstrap.Toast(toastEl);
-      toast.show();
-    })
-    .catch((err) => {
-      console.error('Error al copiar el enlace:', err);
-    });
-};
+    navigator.clipboard.writeText(link)
+      .then(() => {
+        if (toastRef.current) {
+          const toast = new window.bootstrap.Toast(toastRef.current);
+          toast.show();
+        }
+      })
+      .catch((err) => {
+        console.error('Error al copiar el enlace:', err);
+      });
+  };
 
 
   return (
@@ -103,7 +106,7 @@ const copyLink = () => {
         <h2>Configuración de Encuesta</h2>
         {instance?.state === "open" && (
           <button className="btn btn-primary" onClick={copyLink}>
-            Copiar Link a la Encuesta
+            Compartir Encuesta
           </button>
         )}
 
@@ -298,7 +301,7 @@ const copyLink = () => {
       {/* Toast para copiar enlace */}
       <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 11 }}>
         <div
-          id="copyToast"
+          ref={toastRef}
           className="toast align-items-center text-bg-success border-0"
           role="alert"
           aria-live="assertive"
@@ -315,6 +318,7 @@ const copyLink = () => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };
