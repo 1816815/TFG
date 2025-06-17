@@ -36,7 +36,7 @@ const Auth = () => {
           setError("password", {
             type: "validation",
             message:
-              error.message || "La contraseña no cumple con los requisitos.",
+              error || "La contraseña debe tener al menos 8 caracteres.",
           });
           return;
         }

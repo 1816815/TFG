@@ -82,10 +82,31 @@ const SurveyConfiguration = () => {
       });
   };
 
+const copyLink = () => {
+  const link = `https://cuestamarket.duckdns.org/encuestas/${instanceId}/responder`;
+
+  navigator.clipboard.writeText(link)
+    .then(() => {
+      const toastEl = document.getElementById('copyToast');
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    })
+    .catch((err) => {
+      console.error('Error al copiar el enlace:', err);
+    });
+};
+
+
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mt-4">
         <h2>Configuración de Encuesta</h2>
+        {instance?.state === "open" && (
+          <button className="btn btn-primary" onClick={copyLink}>
+            Copiar Link a la Encuesta
+          </button>
+        )}
+
         <button
           className="btn btn-outline-danger"
           data-bs-toggle="modal"
@@ -204,10 +225,15 @@ const SurveyConfiguration = () => {
               ></button>
             </div>
             <div className="modal-body">
-              ¿Estás seguro de que deseas eliminar esta instancia? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar esta instancia? Esta acción
+              no se puede deshacer.
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
                 Cancelar
               </button>
               <button
@@ -245,12 +271,13 @@ const SurveyConfiguration = () => {
               ></button>
             </div>
             <div className="modal-body">
-              ¿Estás seguro de que deseas eliminar esta participación? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar esta participación? Esta
+              acción no se puede deshacer.
             </div>
             <div className="modal-footer">
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
+              <button
+                type="button"
+                className="btn btn-secondary"
                 data-bs-dismiss="modal"
                 onClick={() => setParticipationToDelete(null)}
               >
@@ -265,6 +292,26 @@ const SurveyConfiguration = () => {
                 Eliminar
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+      {/* Toast para copiar enlace */}
+      <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div
+          id="copyToast"
+          class="toast align-items-center text-bg-success border-0"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
+          <div class="d-flex">
+            <div class="toast-body">¡Enlace copiado al portapapeles!</div>
+            <button
+              type="button"
+              class="btn-close btn-close-white me-2 m-auto"
+              data-bs-dismiss="toast"
+              aria-label="Cerrar"
+            ></button>
           </div>
         </div>
       </div>
