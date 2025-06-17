@@ -111,7 +111,7 @@ const processQuestionData = (question, data, totalParticipants) => {
       counts[answer] = (counts[answer] || 0) + 1;
       totalAnswers++;
     } else if (["text", "open", "textarea"].includes(question.type)) {
-      if (answer.trim() !== "" && answer !== "Sin respuesta de texto") {
+      if (answer.trim() !== "" && !answer.includes("Sin respuesta")) {
         counts["Respondidas"] = (counts["Respondidas"] || 0) + 1;
         totalAnswers++;
       }
